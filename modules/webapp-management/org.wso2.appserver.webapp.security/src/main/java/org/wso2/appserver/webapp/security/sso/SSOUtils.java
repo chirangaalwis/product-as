@@ -35,7 +35,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -117,7 +116,7 @@ public class SSOUtils {
      *                      be found
      */
     public static void loadPropertiesFromFile(Properties properties, Path filePath) throws SSOException {
-        if ((Optional.ofNullable(filePath).isPresent()) && (Files.exists(filePath))) {
+        if ((Optional.ofNullable(properties).isPresent()) && (Optional.ofNullable(filePath).isPresent())) {
             try (InputStream fileInputStream = Files.newInputStream(filePath)) {
                 properties.load(fileInputStream);
                 logger.log(Level.INFO, "Successfully loaded the properties from the file");
@@ -125,7 +124,7 @@ public class SSOUtils {
                 throw new SSOException("Error when loading properties from the specified file " + filePath);
             }
         } else {
-            throw new SSOException("File specified by " + filePath + " does not exist");
+            throw new SSOException("Specified properties table structure and file path cannot be null");
         }
     }
 
@@ -157,12 +156,8 @@ public class SSOUtils {
      * @return true if the specified {@link String} is blank, else false
      */
     public static boolean isBlank(String stringValue) {
-        if ((!Optional.ofNullable(stringValue).isPresent()) || (stringValue.isEmpty())) {
-            return true;
-        }
-        Stream<Character> characterStream = stringValue.chars().
-                mapToObj(intCharacter -> (char) intCharacter).parallel().filter(Character::isWhitespace);
-        return characterStream.count() == stringValue.length();
+        return (!Optional.ofNullable(stringValue).isPresent()) || stringValue.isEmpty() || stringValue.chars().
+                mapToObj(intCharacter -> (char) intCharacter).parallel().allMatch(Character::isWhitespace);
     }
 
     /**
