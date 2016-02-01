@@ -219,7 +219,7 @@ public class SAMLSSOUtils {
         XMLHelper.writeNode(authDOM, writer);
 
         if (SAMLConstants.SAML2_REDIRECT_BINDING_URI.equals(binding)) {
-            //  Compress the message, Base 64 encode and URL encode
+            //  Compress the message using default DEFLATE encoding, Base 64 encode and URL encode
             Deflater deflater = new Deflater(Deflater.DEFLATED, true);
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             try (DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(byteArrayOutputStream,
@@ -484,9 +484,9 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Appends the XML Digital Signature encoded via deflate compression to the specified query string.
+     * Applies the XML Digital Signature to the HTTP query string specified.
      *
-     * @param httpQueryString the HTTP query string to which the decoded content is to be appended
+     * @param httpQueryString the primary HTTP query string which is to be digitally signed
      * @param credential      an entity credential associated with X.509 Public Key Infrastructure
      * @throws SSOException if an error occurs while applying the SAML 2.0 Redirect binding signature
      */

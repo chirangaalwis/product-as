@@ -196,16 +196,17 @@ public class SAML2SSOManager {
     }
 
     /**
-     * Handles the request for HTTP Redirect binding.
+     * Handles a request for HTTP Redirect binding.
      *
      * @param request  the HTTP servlet request
      * @param isLogout true if request is a logout request, else false
      * @return the identity provider URL with the appropriate query string appended
      * @throws SSOException if an error occurs when generating the HTTP Redirect binding request
      */
-    public String buildRedirectRequest(HttpServletRequest request, boolean isLogout) throws SSOException {
+    protected String buildRedirectRequest(HttpServletRequest request, boolean isLogout) throws SSOException {
         RequestAbstractType requestMessage;
         if (!isLogout) {
+            //  Builds up the original SAML 2.0 Authentication Request
             requestMessage = buildAuthnRequest(request);
         } else {
             Optional<LoggedInSession> session = Optional.ofNullable((LoggedInSession) request.getSession(false).
@@ -217,12 +218,15 @@ public class SAML2SSOManager {
                 throw new SSOException("Single Logout Request can not be built, single-sign-on session is null");
             }
         }
-        String idpUrl;
+
+        //  Compress the message using default DEFLATE encoding since SAMLEncoding query string parameter
+        //  is not specified, perform Base64 encoding and then URL encoding
         String encodedRequestMessage = SAMLSSOUtils.
                 encodeRequestMessage(requestMessage, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
         StringBuilder httpQueryString = new StringBuilder(SSOConstants.SAML2SSO.HTTP_POST_PARAM_SAML2_REQUEST +
                 "=" + encodedRequestMessage);
 
+        //  Arrange the query string if any RelayState data is to accompany the SAML protocol message
         String relayState = ssoAgentConfiguration.getSAML2().getRelayState();
         if (Optional.ofNullable(relayState).isPresent()) {
             try {
@@ -251,6 +255,7 @@ public class SAML2SSOManager {
                     new X509CredentialImplementation(ssoAgentConfiguration.getSAML2().getSSOAgentX509Credential()));
         }
 
+        String idpUrl;
         if (ssoAgentConfiguration.getSAML2().getIdPURL().contains("?")) {
             idpUrl = ssoAgentConfiguration.getSAML2().getIdPURL().concat("&").concat(httpQueryString.toString());
         } else {
@@ -612,7 +617,7 @@ public class SAML2SSOManager {
      * @param request the HTTP servlet request
      * @throws SSOException if the SAML 2.0 Single Logout Request/Response is invalid
      */
-    public void performSingleLogout(HttpServletRequest request) throws SSOException {
+    protected void performSingleLogout(HttpServletRequest request) throws SSOException {
         Optional<XMLObject> saml2Object = Optional.empty();
 
         if (Optional.ofNullable(request.getParameter(SSOConstants.SAML2SSO.HTTP_POST_PARAM_SAML2_REQUEST)).
