@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.wso2.appserver.webapp.security.sso;
+package org.wso2.appserver.webapp.security.sso.util;
 
 /**
  * This class defines the constants utilized used within the org.wso2.appserver.webapp.security.sso.
@@ -103,13 +103,13 @@ public class SSOConstants {
      */
     public static class SAMLSSOValveConstants {
         //  Environmental variable property name constant
-        protected static final String CATALINA_BASE = "catalina.base";
+        public static final String CATALINA_BASE = "catalina.base";
         //  SSO configuration XML element tag name
-        protected static final String SINGLE_SIGN_ON_CONFIG_TAG_NAME = "wwc:single-sign-on";
+        public static final String SINGLE_SIGN_ON_CONFIG_TAG_NAME = "wwc:single-sign-on";
         //  File path related constants
-        protected static final String TOMCAT_CONFIGURATION_FOLDER_NAME = "conf";
-        protected static final String WSO2_CONFIGURATION_FOLDER_NAME = "wso2";
-        protected static final String WSO2AS_CONFIG_FILE_NAME = "wso2as-web.xml";
+        public static final String TOMCAT_CONFIGURATION_FOLDER_NAME = "conf";
+        public static final String WSO2_CONFIGURATION_FOLDER_NAME = "wso2";
+        public static final String WSO2AS_CONFIG_FILE_NAME = "wso2as-web.xml";
         public static final String SSO_CONFIG_FILE_NAME = "sso-sp-config.properties";
         //  HTTP servlet request session notes' property name and attribute name constants
         public static final String SSO_AGENT_CONFIG = "SSOAgentConfig";

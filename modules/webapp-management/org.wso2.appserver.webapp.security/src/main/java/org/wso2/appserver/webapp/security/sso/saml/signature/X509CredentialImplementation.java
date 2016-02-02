@@ -19,7 +19,7 @@ import org.opensaml.xml.security.credential.Credential;
 import org.opensaml.xml.security.credential.CredentialContextSet;
 import org.opensaml.xml.security.credential.UsageType;
 import org.opensaml.xml.security.x509.X509Credential;
-import org.wso2.appserver.webapp.security.sso.SSOException;
+import org.wso2.appserver.webapp.security.sso.util.SSOException;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;

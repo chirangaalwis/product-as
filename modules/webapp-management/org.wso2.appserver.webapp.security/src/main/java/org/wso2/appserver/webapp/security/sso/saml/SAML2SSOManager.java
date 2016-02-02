@@ -50,15 +50,15 @@ import org.opensaml.saml2.ecp.RelayState;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.validation.ValidationException;
-import org.wso2.appserver.webapp.security.sso.SSOConstants;
-import org.wso2.appserver.webapp.security.sso.SSOException;
-import org.wso2.appserver.webapp.security.sso.SSOUtils;
 import org.wso2.appserver.webapp.security.sso.agent.SSOAgentConfiguration;
 import org.wso2.appserver.webapp.security.sso.agent.SSOAgentSessionManager;
 import org.wso2.appserver.webapp.security.sso.bean.LoggedInSession;
 import org.wso2.appserver.webapp.security.sso.saml.signature.SignatureValidator;
 import org.wso2.appserver.webapp.security.sso.saml.signature.X509CredentialImplementation;
 import org.wso2.appserver.webapp.security.sso.util.SSOAgentDataHolder;
+import org.wso2.appserver.webapp.security.sso.util.SSOConstants;
+import org.wso2.appserver.webapp.security.sso.util.SSOException;
+import org.wso2.appserver.webapp.security.sso.util.SSOUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

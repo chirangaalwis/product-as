@@ -58,11 +58,11 @@ import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
-import org.wso2.appserver.webapp.security.sso.SSOConstants;
-import org.wso2.appserver.webapp.security.sso.SSOException;
-import org.wso2.appserver.webapp.security.sso.SSOUtils;
 import org.wso2.appserver.webapp.security.sso.saml.signature.SSOX509Credential;
 import org.wso2.appserver.webapp.security.sso.saml.signature.X509CredentialImplementation;
+import org.wso2.appserver.webapp.security.sso.util.SSOConstants;
+import org.wso2.appserver.webapp.security.sso.util.SSOException;
+import org.wso2.appserver.webapp.security.sso.util.SSOUtils;
 import org.wso2.appserver.webapp.security.sso.util.XMLEntityResolver;
 import org.xml.sax.SAXException;
 

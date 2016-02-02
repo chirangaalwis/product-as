@@ -13,13 +13,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.wso2.appserver.webapp.security.sso;
+package org.wso2.appserver.webapp.security.sso.util;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.wso2.appserver.webapp.security.sso.util.XMLEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
 

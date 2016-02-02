@@ -18,13 +18,13 @@ package org.wso2.appserver.webapp.security.sso.saml;
 import org.apache.catalina.authenticator.SingleSignOn;
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
-import org.wso2.appserver.webapp.security.sso.SSOConstants;
-import org.wso2.appserver.webapp.security.sso.SSOException;
-import org.wso2.appserver.webapp.security.sso.SSOUtils;
 import org.wso2.appserver.webapp.security.sso.agent.SSOAgentConfiguration;
 import org.wso2.appserver.webapp.security.sso.agent.SSOAgentRequestResolver;
 import org.wso2.appserver.webapp.security.sso.bean.RelayState;
 import org.wso2.appserver.webapp.security.sso.saml.signature.SSOX509Credential;
+import org.wso2.appserver.webapp.security.sso.util.SSOConstants;
+import org.wso2.appserver.webapp.security.sso.util.SSOException;
+import org.wso2.appserver.webapp.security.sso.util.SSOUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;

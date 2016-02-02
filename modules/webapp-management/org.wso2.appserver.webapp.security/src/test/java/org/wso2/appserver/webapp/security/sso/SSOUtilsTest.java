@@ -17,6 +17,9 @@ package org.wso2.appserver.webapp.security.sso;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.wso2.appserver.webapp.security.sso.util.SSOConstants;
+import org.wso2.appserver.webapp.security.sso.util.SSOException;
+import org.wso2.appserver.webapp.security.sso.util.SSOUtils;
 import org.wso2.appserver.webapp.security.sso.util.XMLEntityResolver;
 
 import java.io.IOException;
