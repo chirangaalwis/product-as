@@ -25,7 +25,6 @@ import org.wso2.appserver.webapp.security.sso.util.SSOException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Optional;
 import javax.xml.bind.annotation.XmlAttribute;
 
 /**
@@ -161,7 +160,7 @@ public class LoggedInSession implements Serializable {
             stream.writeObject(responseString);
             stream.writeObject(assertionString);
             stream.writeObject(sessionIndex);
-            if (Optional.ofNullable(accessTokenResponseBean).isPresent()) {
+            if (accessTokenResponseBean != null) {
                 stream.writeObject(accessTokenResponseBean.serialize());
             } else {
                 stream.writeObject(emptyString);
@@ -186,13 +185,12 @@ public class LoggedInSession implements Serializable {
             subjectId = (String) stream.readObject();
 
             responseString = (String) stream.readObject();
-            if ((Optional.ofNullable(responseString).isPresent()) && (!emptyString.equals(responseString))) {
+            if ((responseString != null) && (!emptyString.equals(responseString))) {
                 response = (Response) SAMLSSOUtils.unmarshall(responseString);
             }
 
             setAssertionString((String) stream.readObject());
-            if ((Optional.ofNullable(responseString).isPresent()) && (!emptyString.
-                    equals(assertionString))) {
+            if ((responseString != null) && (!emptyString.equals(assertionString))) {
                 assertion = (Assertion) SAMLSSOUtils.unmarshall(assertionString);
             }
 

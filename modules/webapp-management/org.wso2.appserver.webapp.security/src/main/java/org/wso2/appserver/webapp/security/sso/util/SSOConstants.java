@@ -30,7 +30,7 @@ public class SSOConstants {
     }
 
     /**
-     * This class defines the constants associated during the SAML 2.0 based single-sign-on (SSO) communication.
+     * This class defines the constants associated during the SAML based single-sign-on (SSO) communication.
      */
     public static class SAML2SSO {
         //  SAML 2.0 single-sign-on (SSO) parameter name constants
@@ -58,7 +58,7 @@ public class SSOConstants {
         }
 
         /**
-         * This class defines the SAML 2.0 specific single-sign-on (SSO) configuration property name constants.
+         * This class defines the SAML specific single-sign-on (SSO) configuration property name constants.
          */
         public static class SAML2 {
             public static final String ENABLE_SAML2_SSO_LOGIN = "EnableSAML2SSOLogin";
@@ -99,7 +99,7 @@ public class SSOConstants {
     }
 
     /**
-     * This class defines constants used in the implementation of the SAML 2.0 single-sign-on (SSO) valve.
+     * This class defines constants used in the implementation of the SAML single-sign-on (SSO) valve.
      */
     public static class SAMLSSOValveConstants {
         //  Environmental variable property name constant

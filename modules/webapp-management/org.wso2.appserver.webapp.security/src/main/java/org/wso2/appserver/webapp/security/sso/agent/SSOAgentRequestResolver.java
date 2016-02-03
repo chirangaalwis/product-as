@@ -19,7 +19,6 @@ import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.AuthnRequest;
 import org.wso2.appserver.webapp.security.sso.util.SSOConstants;
 
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -38,10 +37,10 @@ public class SSOAgentRequestResolver {
     }
 
     /**
-     * Returns true if request URI matches the globally configured URL to send SAML 2.0 single-sign-on (SSO)
+     * Returns true if request URI matches the globally configured URL to send SAML single-sign-on (SSO)
      * authentication request(s), else false.
      *
-     * @return true if request URI matches the globally configured URL to send SAML 2.0 single-sign-on (SSO)
+     * @return true if request URI matches the globally configured URL to send SAML single-sign-on (SSO)
      * authentication request(s), else false
      */
     public boolean isSAML2SSOURL() {
@@ -50,35 +49,33 @@ public class SSOAgentRequestResolver {
     }
 
     /**
-     * Returns true if request corresponds to a SAML 2.0 Response for a SAML 2.0 single-sign-on (SSO) authentication
-     * request by the service provider or to a SAML 2.0 Response for a SAML 2.0 single-logout (SLO) request from the
-     * service provider.
+     * Returns true if request corresponds to a SAML Response for a SAML single-sign-on (SSO) authentication request by
+     * the service provider or to a SAML Response for a SAML single-logout (SLO) request from the service provider.
      *
-     * @return true if request corresponds to a SAML 2.0 Response for a SAML 2.0 single-sign-on (SSO) authentication
-     * request by the service provider or to a SAML 2.0 Response for a SAML 2.0 single-logout (SLO) request from the
-     * service provider
+     * @return true if request corresponds to a SAML Response for a SAML single-sign-on (SSO) authentication request by
+     * the service provider or to a SAML Response for a SAML single-logout (SLO) request from the service provider
      */
     public boolean isSAML2SSOResponse() {
-        return (ssoAgentConfiguration.isSAML2SSOLoginEnabled()) && (Optional.ofNullable(request.
-                getParameter(SSOConstants.SAML2SSO.HTTP_POST_PARAM_SAML2_RESPONSE)).isPresent());
+        return (ssoAgentConfiguration.isSAML2SSOLoginEnabled()) && (request.
+                getParameter(SSOConstants.SAML2SSO.HTTP_POST_PARAM_SAML2_RESPONSE) != null);
     }
 
     /**
-     * Returns true if the request is an identity provider initiated SAML 2.0 single-logout (SLO) request, else false.
+     * Returns true if the request is an identity provider initiated SAML single-logout (SLO) request, else false.
      *
-     * @return true if the request is an identity provider initiated SAML 2.0 single-logout (SLO) request, else false
+     * @return true if the request is an identity provider initiated SAML single-logout (SLO) request, else false
      */
     public boolean isSAML2SLORequest() {
-        return (ssoAgentConfiguration.isSAML2SSOLoginEnabled()) && (Optional.ofNullable(request.
-                getParameter(AuthnRequest.DEFAULT_ELEMENT_LOCAL_NAME)).isPresent());
+        return (ssoAgentConfiguration.isSAML2SSOLoginEnabled()) && (request.
+                getParameter(AuthnRequest.DEFAULT_ELEMENT_LOCAL_NAME) != null);
     }
 
     /**
-     * Returns true if the request URI matches globally configured URL for sending session participant initiated
-     * SAML 2.0 single-logout (SLO) request(s), else false.
+     * Returns true if the request URI matches globally configured URL for sending session participant initiated SAML
+     * single-logout (SLO) request(s), else false.
      *
-     * @return true if the request URI matches globally configured URL for sending session participant initiated
-     * SAML 2.0 single-logout (SLO) request(s), else false
+     * @return true if the request URI matches globally configured URL for sending session participant initiated SAML
+     * single-logout (SLO) request(s), else false
      */
     public boolean isSLOURL() {
         return (ssoAgentConfiguration.isSAML2SSOLoginEnabled()) &&
@@ -87,14 +84,13 @@ public class SSOAgentRequestResolver {
     }
 
     /**
-     * Returns true if SAML 2.0 binding is HTTP POST type binding, else false.
+     * Returns true if SAML binding type is of HTTP POST type, else false.
      *
-     * @return true if SAML 2.0 binding is HTTP POST type binding, else false
+     * @return true if SAML binding type is of HTTP POST type, else false
      */
     public boolean isHttpPostBinding() {
         String httpBindingString = ssoAgentConfiguration.getSAML2().getHttpBinding();
-        return (Optional.ofNullable(httpBindingString).isPresent()) && (SAMLConstants.SAML2_POST_BINDING_URI.
-                equals(httpBindingString));
+        return (httpBindingString != null) && (SAMLConstants.SAML2_POST_BINDING_URI.equals(httpBindingString));
     }
 
     /**

@@ -21,8 +21,6 @@ import org.opensaml.xml.validation.ValidationException;
 import org.wso2.appserver.webapp.security.sso.agent.SSOAgentConfiguration;
 import org.wso2.appserver.webapp.security.sso.util.SSOException;
 
-import java.util.Optional;
-
 /**
  * This is a class which implements the XML Signature validator interface {@code SignatureValidator}.
  *
@@ -33,7 +31,7 @@ public class SAMLSignatureValidatorImplementation implements SignatureValidator 
     public void validateSignature(Response response, Assertion assertion, SSOAgentConfiguration ssoAgentConfiguration)
             throws SSOException {
         if (ssoAgentConfiguration.getSAML2().isResponseSigned()) {
-            if (!Optional.ofNullable(response.getSignature()).isPresent()) {
+            if (response.getSignature() == null) {
                 throw new SSOException("SAML2 Response signing is enabled, but signature element not found " +
                         "in SAML2 Response element");
             } else {
@@ -49,7 +47,7 @@ public class SAMLSignatureValidatorImplementation implements SignatureValidator 
             }
         }
         if (ssoAgentConfiguration.getSAML2().isAssertionSigned()) {
-            if (!Optional.ofNullable(assertion.getSignature()).isPresent()) {
+            if (assertion.getSignature() == null) {
                 throw new SSOException("SAML2 Assertion signing is enabled, but signature element not found in " +
                         "SAML2 Assertion element");
             } else {

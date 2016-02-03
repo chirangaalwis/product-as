@@ -60,9 +60,9 @@ public class SSOUtils {
      * @throws SSOException if CATALINA_BASE environmental variable has not been set
      */
     public static Path getCatalinaBase() throws SSOException {
-        String envVariableValue = System.getProperty(SSOConstants.SAMLSSOValveConstants.CATALINA_BASE);
-        if (Optional.ofNullable(envVariableValue).isPresent()) {
-            return Paths.get(envVariableValue);
+        String envVariable = System.getProperty(SSOConstants.SAMLSSOValveConstants.CATALINA_BASE);
+        if (envVariable != null) {
+            return Paths.get(envVariable);
         } else {
             throw new SSOException("CATALINA_BASE environmental variable has not been set");
         }
@@ -78,6 +78,8 @@ public class SSOUtils {
         return Paths.
                 get(getCatalinaBase().toString(), SSOConstants.SAMLSSOValveConstants.TOMCAT_CONFIGURATION_FOLDER_NAME);
     }
+
+    // TODO: HAS TO BE CONSIDERED WHEN CHANGING THE CONFIGURATION PROPERTIES
 
     /**
      * Returns true if single-sign-on (SSO) is enabled, else false.
@@ -115,7 +117,7 @@ public class SSOUtils {
      *                      be found
      */
     public static void loadPropertiesFromFile(Properties properties, Path filePath) throws SSOException {
-        if ((Optional.ofNullable(properties).isPresent()) && (Optional.ofNullable(filePath).isPresent())) {
+        if ((properties != null) && (filePath != null)) {
             try (InputStream fileInputStream = Files.newInputStream(filePath)) {
                 properties.load(fileInputStream);
                 logger.log(Level.INFO, "Successfully loaded the properties from the file");
@@ -128,9 +130,9 @@ public class SSOUtils {
     }
 
     /**
-     * Generates a unique id for SAML 2.0 based tokens.
+     * Generates a unique id for SAML based tokens.
      *
-     * @return a unique id for SAML 2.0 based tokens
+     * @return a unique id for SAML based tokens
      */
     public static String createID() {
         byte[] bytes = new byte[20]; // 160 bit
@@ -155,7 +157,7 @@ public class SSOUtils {
      * @return true if the specified {@link String} is blank, else false
      */
     public static boolean isBlank(String stringValue) {
-        return (!Optional.ofNullable(stringValue).isPresent()) || stringValue.isEmpty() || stringValue.chars().
+        return (stringValue == null) || stringValue.isEmpty() || stringValue.chars().
                 mapToObj(intCharacter -> (char) intCharacter).parallel().allMatch(Character::isWhitespace);
     }
 
@@ -166,7 +168,7 @@ public class SSOUtils {
      * @return true if the specified {@code Collection} is null or empty, else false
      */
     public static boolean isCollectionEmpty(Collection collection) {
-        return ((!Optional.ofNullable(collection).isPresent()) || (collection.isEmpty()));
+        return ((collection == null) || (collection.isEmpty()));
     }
 
     /**

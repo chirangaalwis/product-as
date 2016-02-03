@@ -17,9 +17,10 @@ package org.wso2.appserver.webapp.security.sso.bean;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * This class represents a SAML 2.0 RelayState token.
+ * This Java bean class which represents a SAML RelayState token.
  *
  * @since 6.0.0
  */
@@ -38,16 +39,16 @@ public class RelayState implements Serializable {
         this.requestedURL = requestedURL;
     }
 
-    public String getRequestQueryString() {
-        return requestQueryString;
+    public Optional<String> getRequestQueryString() {
+        return Optional.ofNullable(requestQueryString);
     }
 
     public void setRequestQueryString(String requestQueryString) {
         this.requestQueryString = requestQueryString;
     }
 
-    public Map getRequestParameters() {
-        return requestParameters;
+    public Optional<Map> getRequestParameters() {
+        return Optional.ofNullable(requestParameters);
     }
 
     public void setRequestParameters(Map requestParameters) {

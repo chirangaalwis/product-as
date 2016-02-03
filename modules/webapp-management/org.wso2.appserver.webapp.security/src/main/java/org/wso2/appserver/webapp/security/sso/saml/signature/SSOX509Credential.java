@@ -65,25 +65,24 @@ public class SSOX509Credential {
         Optional generatedKeyStore = SAMLSSOUtils.generateKeyStore(keyStoreConfigurationProperties);
         if (generatedKeyStore.isPresent()) {
             KeyStore keyStore = (KeyStore) generatedKeyStore.get();
-            Optional<String> certificateAlias = Optional.ofNullable(keyStoreConfigurationProperties.
-                    getProperty(SSOConstants.SSOAgentConfiguration.SAML2.IDP_PUBLIC_CERTIFICATE_ALIAS));
+            String certificateAlias = keyStoreConfigurationProperties.
+                    getProperty(SSOConstants.SSOAgentConfiguration.SAML2.IDP_PUBLIC_CERTIFICATE_ALIAS);
             try {
-                if (certificateAlias.isPresent()) {
-                    entityCertificate = (X509Certificate) keyStore.getCertificate(certificateAlias.get());
+                if (certificateAlias != null) {
+                    entityCertificate = (X509Certificate) keyStore.getCertificate(certificateAlias);
                 }
             } catch (KeyStoreException e) {
                 throw new SSOException(
                         "Error occurred while retrieving public certificate with certificateAlias " + certificateAlias);
             }
 
-            Optional<String> privateKeyAlias = Optional.ofNullable(keyStoreConfigurationProperties.
-                    getProperty(SSOConstants.SSOAgentConfiguration.SAML2.SP_PRIVATE_KEY_ALIAS));
-            Optional<String> privateKeyPassword = Optional.ofNullable(keyStoreConfigurationProperties.
-                    getProperty(SSOConstants.SSOAgentConfiguration.SAML2.SP_PRIVATE_KEY_PASSWORD));
+            String privateKeyAlias = keyStoreConfigurationProperties.
+                    getProperty(SSOConstants.SSOAgentConfiguration.SAML2.SP_PRIVATE_KEY_ALIAS);
+            String privateKeyPassword = keyStoreConfigurationProperties.
+                    getProperty(SSOConstants.SSOAgentConfiguration.SAML2.SP_PRIVATE_KEY_PASSWORD);
             try {
-                if ((privateKeyAlias.isPresent()) && (privateKeyPassword.isPresent())) {
-                    privateKey = (PrivateKey) keyStore.
-                            getKey(privateKeyAlias.get(), privateKeyPassword.get().toCharArray());
+                if ((privateKeyAlias != null) && (privateKeyPassword != null)) {
+                    privateKey = (PrivateKey) keyStore.getKey(privateKeyAlias, privateKeyPassword.toCharArray());
                 }
             } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
                 throw new SSOException("Error occurred while retrieving the private key");

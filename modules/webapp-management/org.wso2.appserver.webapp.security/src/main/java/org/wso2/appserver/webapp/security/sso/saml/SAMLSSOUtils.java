@@ -115,12 +115,12 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Returns a unique id value for the SAML 2.0 service provider application based on its context path.
+     * Returns a unique id value for the SAML service provider application based on its context path.
      * <p>
      * An {@code Optional String} id is returned based on the context path provided.
      *
      * @param contextPath the context path of the service provider application
-     * @return a unique id value for the SAML 2.0 service provider application based on its context path
+     * @return a unique id value for the SAML service provider application based on its context path
      */
     protected static Optional generateIssuerID(String contextPath) {
         if (Optional.ofNullable(contextPath).isPresent()) {
@@ -135,13 +135,13 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Returns a SAML 2.0 Assertion Consumer URL based on service provider application context path.
+     * Returns a SAML Assertion Consumer URL based on service provider application context path.
      * <p>
      * An {@code Optional String} URL is returned based on the context path and configuration properties provided.
      *
      * @param contextPath           the context path of the service provider application
      * @param ssoSPConfigProperties the global single-sign-on configuration properties
-     * @return a SAML 2.0 Assertion Consumer URL based on service provider application context path
+     * @return a SAML Assertion Consumer URL based on service provider application context path
      */
     protected static Optional generateConsumerUrl(String contextPath, Properties ssoSPConfigProperties) {
         if ((Optional.ofNullable(contextPath).isPresent()) && (Optional.ofNullable(ssoSPConfigProperties).
@@ -173,19 +173,18 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Returns SAML 2.0 Assertion Attribute Statement content.
+     * Returns SAML Assertion Attribute Statement content.
      *
-     * @param assertion the SAML 2.0 Assertion whose content is to be returned
-     * @return Attribute Statement content of the SAML 2.0 Assertion specified
+     * @param assertion the SAML Assertion whose content is to be returned
+     * @return Attribute Statement content of the SAML Assertion specified
      */
     protected static Map<String, String> getAssertionStatements(Assertion assertion) {
         Map<String, String> results = new HashMap<>();
-        if ((Optional.ofNullable(assertion).isPresent()) && (Optional.ofNullable(assertion.getAttributeStatements()).
-                isPresent())) {
+        if ((assertion != null) && (assertion.getAttributeStatements() != null)) {
             Stream<AttributeStatement> attributeStatements = assertion.getAttributeStatements().stream();
             attributeStatements.
                     forEach(attributeStatement -> attributeStatement.getAttributes().stream().forEach(attribute -> {
-                        Element value = attribute.getAttributeValues().get(0).getDOM();
+                        Element value = attribute.getAttributeValues().stream().findFirst().get().getDOM();
                         String attributeValue = value.getTextContent();
                         results.put(attribute.getName(), attributeValue);
                     }));
@@ -194,13 +193,13 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Encodes the SAML 2.0 based request XML object into its corresponding Base64 notation, based on the type of
-     * SAML 2.0 binding.
+     * Encodes the SAML based request XML object into its corresponding Base64 notation, based on the type of SAML
+     * binding.
      *
      * @param requestMessage the {@link RequestAbstractType} XML object to be encoded
-     * @param binding        the SAML 2.0 binding type
+     * @param binding        the SAML binding type
      * @return encoded {@link String} corresponding to the request XML object
-     * @throws SSOException if an error occurs while encoding SAML2 request
+     * @throws SSOException if an error occurs while encoding SAML request
      */
     protected static String encodeRequestMessage(RequestAbstractType requestMessage, String binding)
             throws SSOException {
@@ -210,7 +209,7 @@ public class SAMLSSOUtils {
             //  Marshall this element, and its children, and root them in a newly created Document
             authDOM = marshaller.marshall(requestMessage);
         } catch (MarshallingException e) {
-            throw new SSOException("Error occurred while encoding SAML2 request, failed to marshall the SAML 2.0. " +
+            throw new SSOException("Error occurred while encoding SAML request, failed to marshall the SAML 2.0. " +
                     "Request element XMLObject to its corresponding W3C DOM element", e);
         }
 
@@ -226,7 +225,7 @@ public class SAMLSSOUtils {
                     deflater)) {
                 deflaterOutputStream.write(writer.toString().getBytes(Charset.forName("UTF-8")));
             } catch (IOException e) {
-                throw new SSOException("Error occurred while deflate encoding SAML2 request", e);
+                throw new SSOException("Error occurred while deflate encoding SAML request", e);
             }
 
             String encodedRequestMessage = Base64.
@@ -234,7 +233,7 @@ public class SAMLSSOUtils {
             try {
                 return URLEncoder.encode(encodedRequestMessage, "UTF-8").trim();
             } catch (UnsupportedEncodingException e) {
-                throw new SSOException("Error occurred while encoding SAML2 request", e);
+                throw new SSOException("Error occurred while encoding SAML request", e);
             }
         } else if (SAMLConstants.SAML2_POST_BINDING_URI.equals(binding)) {
             return Base64.
@@ -248,11 +247,11 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Serializes the specified SAML 2.0 based XML content representation to its corresponding actual XML syntax
+     * Serializes the specified SAML based XML content representation to its corresponding actual XML syntax
      * representation.
      *
-     * @param xmlObject the SAML 2.0 based XML content object
-     * @return a {@link String} representation of the actual XML representation of the SAML 2.0 based XML content
+     * @param xmlObject the SAML based XML content object
+     * @return a {@link String} representation of the actual XML representation of the SAML based XML content
      * representation
      * @throws SSOException if an error occurs during the marshalling process
      */
@@ -273,12 +272,12 @@ public class SAMLSSOUtils {
             writer.write(element, output);
             return new String(byteArrayOutputStream.toByteArray(), Charset.forName("UTF-8"));
         } catch (ClassNotFoundException | InstantiationException | MarshallingException | IllegalAccessException e) {
-            throw new SSOException("Error in marshalling SAML2 Assertion", e);
+            throw new SSOException("Error in marshalling SAML Assertion", e);
         }
     }
 
     /**
-     * Returns a SAML 2.0 based XML content representation from the {@code String} value representing the XML syntax.
+     * Returns a SAML based XML content representation from the {@code String} value representing the XML syntax.
      *
      * @param xmlString the {@link String} representation of the XML content
      * @return an XML object from the {@link String} value representing the XML syntax
@@ -300,11 +299,11 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Returns a decrypted SAML 2.0 {@code Assertion} from the specified SAML 2.0 encrypted {@code Assertion}.
+     * Returns a decrypted SAML {@code Assertion} from the specified SAML encrypted {@code Assertion}.
      *
      * @param ssoAgentX509Credential credential for the resolver
      * @param encryptedAssertion     the {@link EncryptedAssertion} instance to be decrypted
-     * @return a decrypted SAML 2.0 {@link Assertion} from the specified SAML 2.0 {@link EncryptedAssertion}
+     * @return a decrypted SAML {@link Assertion} from the specified SAML {@link EncryptedAssertion}
      * @throws SSOException if an error occurs during the decryption process
      */
     protected static Assertion decryptAssertion(SSOX509Credential ssoAgentX509Credential,
@@ -339,25 +338,25 @@ public class SAMLSSOUtils {
      * @throws SSOException if an error occurs while generating the {@link KeyStore} instance
      */
     public static Optional generateKeyStore(Properties keyStoreConfigurationProperties) throws SSOException {
-        if (!Optional.ofNullable(keyStoreConfigurationProperties).isPresent()) {
+        if (keyStoreConfigurationProperties == null) {
             return Optional.empty();
         }
 
-        Optional<String> keyStorePathString = Optional.ofNullable(keyStoreConfigurationProperties.
-                getProperty(SSOConstants.SSOAgentConfiguration.SAML2.KEYSTORE_PATH));
-        Optional<String> keyStorePasswordString = Optional.ofNullable(keyStoreConfigurationProperties.
-                getProperty(SSOConstants.SSOAgentConfiguration.SAML2.KEYSTORE_PASSWORD));
+        String keyStorePathString = keyStoreConfigurationProperties.
+                getProperty(SSOConstants.SSOAgentConfiguration.SAML2.KEYSTORE_PATH);
+        String keyStorePasswordString = keyStoreConfigurationProperties.
+                getProperty(SSOConstants.SSOAgentConfiguration.SAML2.KEYSTORE_PASSWORD);
 
-        if ((!keyStorePasswordString.isPresent()) || (!keyStorePathString.isPresent())) {
+        if ((keyStorePasswordString == null) || (keyStorePathString == null)) {
             return Optional.empty();
         }
 
-        Path keyStorePath = Paths.get(keyStorePathString.get());
+        Path keyStorePath = Paths.get(keyStorePathString);
         if (Files.exists(keyStorePath)) {
             try (InputStream keystoreInputStream = Files.newInputStream(keyStorePath)) {
                 String keyStoreType = "JKS";
                 KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-                keyStore.load(keystoreInputStream, keyStorePasswordString.get().toCharArray());
+                keyStore.load(keystoreInputStream, keyStorePasswordString.toCharArray());
                 return Optional.of(keyStore);
             } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
                 throw new SSOException("Error while loading key store", e);
@@ -369,13 +368,13 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Applies the XML Digital Signature to the SAML 2.0 based Authentication Request (AuthnRequest).
+     * Applies the XML Digital Signature to the SAML based Authentication Request (AuthnRequest).
      *
-     * @param authnRequest       the SAML 2.0 based Authentication Request (AuthnRequest)
+     * @param authnRequest       the SAML based Authentication Request (AuthnRequest)
      * @param signatureAlgorithm the algorithm used to compute the signature
      * @param credential         the signature signing credential
-     * @return the SAML 2.0 based Authentication Request (AuthnRequest) with XML Digital Signature set
-     * @throws SSOException if an error occurs while signing the SAML 2.0 AuthnRequest message
+     * @return the SAML based Authentication Request (AuthnRequest) with XML Digital Signature set
+     * @throws SSOException if an error occurs while signing the SAML AuthnRequest message
      */
     protected static AuthnRequest setSignature(AuthnRequest authnRequest, String signatureAlgorithm,
             X509Credential credential) throws SSOException {
@@ -399,18 +398,18 @@ public class SAMLSSOUtils {
             Signer.signObjects(signatureList);
             return authnRequest;
         } catch (MarshallingException | SignatureException e) {
-            throw new SSOException("Error while signing the SAML 2.0 AuthnRequest message", e);
+            throw new SSOException("Error while signing the SAML AuthnRequest message", e);
         }
     }
 
     /**
-     * Applies the XML Digital Signature to the SAML 2.0 based Logout Request (LogoutRequest).
+     * Applies the XML Digital Signature to the SAML based Logout Request (LogoutRequest).
      *
-     * @param logoutRequest      the SAML 2.0 based Logout Request (LogoutRequest)
+     * @param logoutRequest      the SAML based Logout Request (LogoutRequest)
      * @param signatureAlgorithm the algorithm used to compute the signature
      * @param credential         the signature signing credential
-     * @return the SAML 2.0 based Logout Request (LogoutRequest) with XML Digital Signature set
-     * @throws SSOException if an error occurs while signing the SAML 2.0 LogoutRequest message
+     * @return the SAML based Logout Request (LogoutRequest) with XML Digital Signature set
+     * @throws SSOException if an error occurs while signing the SAML LogoutRequest message
      */
     protected static LogoutRequest setSignature(LogoutRequest logoutRequest, String signatureAlgorithm,
             X509Credential credential) throws SSOException {
@@ -467,16 +466,16 @@ public class SAMLSSOUtils {
     }
 
     /**
-     * Builds a SAML 2.0 based XML object using the fully qualified name.
+     * Builds a SAML based XML object using the fully qualified name.
      *
      * @param objectQualifiedName fully qualified name
-     * @return a SAML 2.0 based XML object
+     * @return a SAML based XML object
      * @throws SSOException if an error occurs while retrieving the builder for the fully qualified name
      */
     private static XMLObject buildXMLObject(QName objectQualifiedName) throws SSOException {
         doBootstrap();
         XMLObjectBuilder builder = org.opensaml.xml.Configuration.getBuilderFactory().getBuilder(objectQualifiedName);
-        if (!Optional.ofNullable(builder).isPresent()) {
+        if (builder == null) {
             throw new SSOException("Unable to retrieve builder for object QName " + objectQualifiedName);
         }
         return builder.buildObject(objectQualifiedName.getNamespaceURI(), objectQualifiedName.getLocalPart(),
@@ -507,7 +506,7 @@ public class SAMLSSOUtils {
                     append(URLEncoder.encode(signatureBase64encodedString, "UTF-8").trim());
         } catch (NoSuchAlgorithmException | InvalidKeyException |
                 java.security.SignatureException | UnsupportedEncodingException e) {
-            throw new SSOException("Error applying SAML 2.0 Redirect Binding signature", e);
+            throw new SSOException("Error applying SAML Redirect Binding signature", e);
         }
     }
 }

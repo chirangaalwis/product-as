@@ -84,10 +84,9 @@ public class SAMLSSOValve extends SingleSignOn {
             return;
         }
 
-        SSOAgentConfiguration ssoAgentConfiguration;
-        Optional ssoAgent = Optional.ofNullable(request.getSessionInternal().
+        SSOAgentConfiguration ssoAgentConfiguration = (SSOAgentConfiguration) (request.getSessionInternal().
                 getNote(SSOConstants.SAMLSSOValveConstants.SSO_AGENT_CONFIG));
-        if (!ssoAgent.isPresent()) {
+        if (ssoAgentConfiguration == null) {
             try {
                 //  Constructs a new SSOAgentConfiguration instance
                 ssoAgentConfiguration = new SSOAgentConfiguration();
@@ -95,10 +94,11 @@ public class SAMLSSOValve extends SingleSignOn {
 
                 ssoAgentConfiguration.getSAML2().
                         setSSOAgentX509Credential(new SSOX509Credential(ssoSPConfigProperties));
-                Optional.of(SAMLSSOUtils.generateIssuerID(request.getContextPath())).
-                        ifPresent(id -> ssoAgentConfiguration.getSAML2().setSPEntityId((String) id.get()));
-                Optional.of(SAMLSSOUtils.generateConsumerUrl(request.getContextPath(), ssoSPConfigProperties)).
-                        ifPresent(url -> ssoAgentConfiguration.getSAML2().setACSURL((String) url.get()));
+                ssoAgentConfiguration.getSAML2().
+                        setSPEntityId((String) SAMLSSOUtils.generateIssuerID(request.getContextPath()).get());
+                ssoAgentConfiguration.getSAML2().setACSURL(
+                        (String) SAMLSSOUtils.generateConsumerUrl(request.getContextPath(), ssoSPConfigProperties).
+                                get());
                 ssoAgentConfiguration.verifyConfig();
 
                 request.getSessionInternal().
@@ -107,8 +107,6 @@ public class SAMLSSOValve extends SingleSignOn {
                 logger.log(Level.SEVERE, "Error on initializing SAML2SSOManager", e);
                 return;
             }
-        } else {
-            ssoAgentConfiguration = (SSOAgentConfiguration) ssoAgent.get();
         }
 
         try {
@@ -136,28 +134,25 @@ public class SAMLSSOValve extends SingleSignOn {
                 //  tries to read the redirect path from the session attribute
                 String redirectPath = saml2SSOManager.
                         readAndForgetRedirectPathAfterSLO(request, ssoSPConfigProperties.
-                                        getProperty(SSOConstants.SAMLSSOValveConstants.REDIRECT_PATH_AFTER_SLO));
+                                getProperty(SSOConstants.SAMLSSOValveConstants.REDIRECT_PATH_AFTER_SLO));
 
                 saml2SSOManager.processResponse(request);
                 //  Redirect according to relay state attribute
                 String relayStateId = ssoAgentConfiguration.getSAML2().getRelayState();
-                if ((Optional.ofNullable(relayStateId).isPresent()) && (Optional.ofNullable(request.getSession(false)).
-                        isPresent())) {
-                    Optional<RelayState> relayState = Optional.
-                            ofNullable((RelayState) request.getSession(false).getAttribute(relayStateId));
-                    if (relayState.isPresent()) {
+                if ((relayStateId != null) && (request.getSession(false) != null)) {
+                    RelayState relayState = (RelayState) request.getSession(false).getAttribute(relayStateId);
+                    if (relayState != null) {
                         request.getSession(false).removeAttribute(relayStateId);
-                        StringBuilder requestedURI = new StringBuilder(relayState.get().getRequestedURL());
-                        Optional.ofNullable(relayState.get().getRequestQueryString()).
+                        StringBuilder requestedURI = new StringBuilder(relayState.getRequestedURL());
+                        relayState.getRequestQueryString().
                                 ifPresent(queryString -> requestedURI.append("?").append(queryString));
-                        Optional.ofNullable(relayState.get().getRequestParameters()).
-                                ifPresent(queryParameters -> request.getSession(false).
-                                        setAttribute(SSOConstants.SAMLSSOValveConstants.REQUEST_PARAM_MAP,
-                                                relayState.get().getRequestParameters()));
+                        relayState.getRequestParameters().ifPresent(queryParameters -> request.getSession(false).
+                                setAttribute(SSOConstants.SAMLSSOValveConstants.REQUEST_PARAM_MAP, queryParameters));
                         response.sendRedirect(requestedURI.toString());
                     } else {
-                        response.sendRedirect(ssoSPConfigProperties.getProperty(
-                                SSOConstants.SAMLSSOValveConstants.APP_SERVER_URL) + request.getContextPath());
+                        response.sendRedirect(
+                                ssoSPConfigProperties.getProperty(SSOConstants.SAMLSSOValveConstants.APP_SERVER_URL) +
+                                        request.getContextPath());
                     }
                 } else if (request.getRequestURI().endsWith(ssoSPConfigProperties.
                         getProperty(SSOConstants.SSOAgentConfiguration.SAML2.CONSUMER_URL_POSTFIX)) && Boolean.
@@ -174,8 +169,7 @@ public class SAMLSSOValve extends SingleSignOn {
                 logger.log(Level.FINE, "Processing Single Log Out URL...");
                 saml2SSOManager = new SAML2SSOManager(ssoAgentConfiguration);
                 if (requestResolver.isHttpPostBinding()) {
-                    if (Optional.ofNullable(request.getSession(false).getAttribute(SSOConstants.SESSION_BEAN_NAME)).
-                            isPresent()) {
+                    if (request.getSession(false).getAttribute(SSOConstants.SESSION_BEAN_NAME) != null) {
                         ssoAgentConfiguration.getSAML2().setPassiveAuthn(false);
                         String htmlPayload = saml2SSOManager.buildPostRequest(request, true);
                         saml2SSOManager.sendCharacterData(response, htmlPayload);
@@ -188,10 +182,8 @@ public class SAMLSSOValve extends SingleSignOn {
                     response.sendRedirect(saml2SSOManager.buildRedirectRequest(request, true));
                 }
                 return;
-            } else if ((requestResolver.isSAML2SSOURL()) || (
-                    (!Optional.ofNullable(request.getSession(false)).isPresent()) || (!Optional.
-                            ofNullable(request.getSession(false).getAttribute(SSOConstants.SESSION_BEAN_NAME)).
-                            isPresent()))) {
+            } else if ((requestResolver.isSAML2SSOURL()) || ((request.getSession(false) == null) || (
+                    request.getSession(false).getAttribute(SSOConstants.SESSION_BEAN_NAME) == null))) {
                 //  Handles the unauthenticated requests for all contexts
                 logger.log(Level.FINE, "Processing SSO URL...");
                 saml2SSOManager = new SAML2SSOManager(ssoAgentConfiguration);
