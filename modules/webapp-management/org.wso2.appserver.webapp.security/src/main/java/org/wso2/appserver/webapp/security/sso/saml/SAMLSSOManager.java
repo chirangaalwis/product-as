@@ -83,12 +83,12 @@ import javax.servlet.http.HttpSession;
  *
  * @since 6.0.0
  */
-public class SAML2SSOManager {
+public class SAMLSSOManager {
     private static final Logger logger = Logger.getLogger(SSOUtils.class.getName());
 
     private SSOAgentConfiguration ssoAgentConfiguration;
 
-    public SAML2SSOManager(SSOAgentConfiguration ssoAgentConfiguration) throws SSOException {
+    public SAMLSSOManager(SSOAgentConfiguration ssoAgentConfiguration) throws SSOException {
         this.ssoAgentConfiguration = ssoAgentConfiguration;
         loadCustomSignatureValidatorClass();
         SAMLSSOUtils.doBootstrap();
@@ -111,44 +111,63 @@ public class SAML2SSOManager {
     }
 
     /**
-     * Handles the request for HTTP POST binding.
+     * Handles a SAML Authentication Request (AuthnRequest) for SAML HTTP POST binding.
      *
-     * @param request  the HTTP servlet request with SAML 2.0 message
-     * @param isLogout true if request is a logout request, else false
+     * @param request the HTTP servlet request with SAML message
      * @return the HTML payload to be transmitted
-     * @throws SSOException if SSO session is null
+     * @throws SSOException if an error occurs when handling AuthnRequest
      */
-    protected String buildPostRequest(HttpServletRequest request, boolean isLogout) throws SSOException {
-        //  Parent complex type RequestAbstractType from which all SAML 2.0 request types are derived
+    protected String handleAuthnRequestForPOSTBinding(HttpServletRequest request) throws SSOException {
+        RequestAbstractType requestMessage = buildAuthnRequest(request);
+        if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
+            requestMessage = SAMLSSOUtils.
+                    setSignature((AuthnRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
+                            new X509CredentialImplementation(
+                                    ssoAgentConfiguration.getSAML2().getSSOAgentX509Credential()));
+        }
+
+        return preparePOSTRequest(requestMessage);
+    }
+
+    /**
+     * Handles a SAML Logout Request (LogoutRequest) for SAML HTTP POST binding.
+     *
+     * @param request the HTTP servlet request with SAML message
+     * @return the HTML payload to be transmitted
+     * @throws SSOException if an error occurs when handling LogoutRequest
+     */
+    protected String handleLogoutRequestForPOSTBinding(HttpServletRequest request) throws SSOException {
+        LoggedInSession session = (LoggedInSession) request.getSession(false).
+                getAttribute(SSOConstants.SESSION_BEAN_NAME);
         RequestAbstractType requestMessage;
-        if (!isLogout) {
-            requestMessage = buildAuthnRequest(request);
+        if (session != null) {
+            requestMessage = buildLogoutRequest(session.getSAML2SSO().getSubjectId(),
+                    session.getSAML2SSO().getSessionIndex());
             if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
                 requestMessage = SAMLSSOUtils.
-                        setSignature((AuthnRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
+                        setSignature((LogoutRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
                                 new X509CredentialImplementation(
                                         ssoAgentConfiguration.getSAML2().getSSOAgentX509Credential()));
             }
         } else {
-            LoggedInSession session = (LoggedInSession) request.getSession(false).
-                    getAttribute(SSOConstants.SESSION_BEAN_NAME);
-            if (session != null) {
-                requestMessage = buildLogoutRequest(session.getSAML2SSO().getSubjectId(),
-                        session.getSAML2SSO().getSessionIndex());
-                if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
-                    requestMessage = SAMLSSOUtils.
-                            setSignature((LogoutRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
-                                    new X509CredentialImplementation(
-                                            ssoAgentConfiguration.getSAML2().getSSOAgentX509Credential()));
-                }
-            } else {
-                throw new SSOException(
-                        "Single-logout (SLO) Request cannot be built. Single-sign-on (SSO) Session is null.");
-            }
+            throw new SSOException(
+                    "Single-logout (SLO) Request cannot be built. Single-sign-on (SSO) Session is null.");
         }
 
+        return preparePOSTRequest(requestMessage);
+    }
+
+    /**
+     * Handles the specified {@code RequestAbstractType} for SAML HTTP POST binding.
+     *
+     * @param rawRequestMessage the {@link RequestAbstractType} which is either a SAML AuthnRequest or
+     *                          a SAML LogoutRequest
+     * @return the HTML payload string
+     * @throws SSOException if an error occurs when encoding the request message
+     */
+    private String preparePOSTRequest(RequestAbstractType rawRequestMessage) throws SSOException {
         String encodedRequestMessage = SAMLSSOUtils.
-                encodeRequestMessage(requestMessage, SAMLConstants.SAML2_POST_BINDING_URI);
+                encodeRequestMessage(rawRequestMessage, SAMLConstants.SAML2_POST_BINDING_URI);
 
         Map<String, String[]> parameters = new HashMap<>();
         parameters.
@@ -196,33 +215,49 @@ public class SAML2SSOManager {
     }
 
     /**
-     * Handles a request for HTTP Redirect binding.
-     *
-     * @param request  the HTTP servlet request
-     * @param isLogout true if request is a logout request, else false
-     * @return the identity provider URL with the appropriate query string appended
-     * @throws SSOException if an error occurs when generating the HTTP Redirect binding request
+     * Handles a SAML Authentication Request (AuthnRequest) for SAML HTTP Redirect binding.
+     * @param request the HTTP servlet request with SAML message
+     * @return the Identity Provider URL with the query string appended based on the SAML Request and configurations
+     * @throws SSOException if an error occurs when handling AuthnRequest
      */
-    protected String buildRedirectRequest(HttpServletRequest request, boolean isLogout) throws SSOException {
+    protected String handleAuthnRequestForRedirectBinding(HttpServletRequest request) throws SSOException {
+        RequestAbstractType requestMessage = buildAuthnRequest(request);
+        return prepareRedirectRequest(requestMessage);
+    }
+
+    /**
+     * Handles a SAML Logout Request (LogoutRequest) for SAML HTTP Redirect binding.
+     * @param request the HTTP servlet request with SAML message
+     * @return the Identity Provider URL with the query string appended based on the SAML Request and configurations
+     * @throws SSOException if an error occurs when handling LogoutRequest
+     */
+    protected String handleLogoutRequestForRedirectBinding(HttpServletRequest request) throws SSOException {
+        LoggedInSession session = (LoggedInSession) request.getSession(false).
+                getAttribute(SSOConstants.SESSION_BEAN_NAME);
         RequestAbstractType requestMessage;
-        if (!isLogout) {
-            //  Builds up the original SAML 2.0 Authentication Request
-            requestMessage = buildAuthnRequest(request);
+        if (session != null) {
+            requestMessage = buildLogoutRequest(session.getSAML2SSO().getSubjectId(),
+                    session.getSAML2SSO().getSessionIndex());
         } else {
-            LoggedInSession session = (LoggedInSession) request.getSession(false).
-                    getAttribute(SSOConstants.SESSION_BEAN_NAME);
-            if (session != null) {
-                requestMessage = buildLogoutRequest(session.getSAML2SSO().getSubjectId(),
-                        session.getSAML2SSO().getSessionIndex());
-            } else {
-                throw new SSOException("Single Logout Request can not be built, single-sign-on session is null");
-            }
+            throw new SSOException("Single Logout Request can not be built, single-sign-on session is null");
         }
 
+        return prepareRedirectRequest(requestMessage);
+    }
+
+    /**
+     * Handles the specified {@code RequestAbstractType} for SAML Redirect POST binding.
+     *
+     * @param rawRequestMessage the {@link RequestAbstractType} which is either a SAML AuthnRequest or
+     *                          a SAML LogoutRequest
+     * @return the Identity Provider URL with the query string appended based on the SAML Request and configurations
+     * @throws SSOException if an error occurs when preparing the HTTP Redirect request
+     */
+    private String prepareRedirectRequest(RequestAbstractType rawRequestMessage) throws SSOException {
         //  Compress the message using default DEFLATE encoding since SAMLEncoding query string parameter
         //  is not specified, perform Base64 encoding and then URL encoding
         String encodedRequestMessage = SAMLSSOUtils.
-                encodeRequestMessage(requestMessage, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
+                encodeRequestMessage(rawRequestMessage, SAMLConstants.SAML2_REDIRECT_BINDING_URI);
         StringBuilder httpQueryString = new StringBuilder(SSOConstants.SAML2SSO.HTTP_POST_PARAM_SAML2_REQUEST +
                 "=" + encodedRequestMessage);
 
@@ -329,6 +364,45 @@ public class SAML2SSOManager {
         }
 
         return authnRequest;
+    }
+
+    /**
+     * Returns a SAML Logout Request (LogoutRequest) instance.
+     *
+     * @param user         the identifier that specify the principal as currently recognized by the identity and
+     *                     service providers
+     * @param sessionIndex the identifier that indexes this session at the message recipient
+     * @return a SAML Logout Request (LogoutRequest) instance
+     */
+    private LogoutRequest buildLogoutRequest(String user, String sessionIndex) {
+        //  Creates a Logout Request instance
+        LogoutRequest logoutRequest = new LogoutRequestBuilder().buildObject();
+
+        logoutRequest.setID(SSOUtils.createID());
+        logoutRequest.setDestination(ssoAgentConfiguration.getSAML2().getIdPURL());
+
+        DateTime issueInstant = new DateTime();
+        logoutRequest.setIssueInstant(issueInstant);
+        //  Time at which the request expires, after which the recipient may discard the message
+        logoutRequest.setNotOnOrAfter(new DateTime(issueInstant.getMillis() + (5 * 60 * 1000)));
+
+        Issuer issuer = new IssuerBuilder().buildObject();
+        issuer.setValue(ssoAgentConfiguration.getSAML2().getSPEntityId());
+        logoutRequest.setIssuer(issuer);
+
+        NameID nameId = new NameIDBuilder().buildObject();
+        nameId.setFormat("urn:oasis:names:tc:SAML:2.0:nameid-format:entity");
+        nameId.setValue(user);
+        logoutRequest.setNameID(nameId);
+
+        SessionIndex sessionIndexElement = new SessionIndexBuilder().buildObject();
+        sessionIndexElement.setSessionIndex(sessionIndex);
+        logoutRequest.getSessionIndexes().add(sessionIndexElement);
+
+        //  Indicates the reason for the logout
+        logoutRequest.setReason("Single Logout");
+
+        return logoutRequest;
     }
 
     /**
@@ -647,44 +721,5 @@ public class SAML2SSOManager {
         } else {
             throw new SSOException("Invalid SAML Single Logout Request/Response.");
         }
-    }
-
-    /**
-     * Returns a SAML Logout Request (LogoutRequest) instance.
-     *
-     * @param user         the identifier that specify the principal as currently recognized by the identity and
-     *                     service providers
-     * @param sessionIndex the identifier that indexes this session at the message recipient
-     * @return a SAML Logout Request (LogoutRequest) instance
-     */
-    private LogoutRequest buildLogoutRequest(String user, String sessionIndex) {
-        //  Creates a Logout Request instance
-        LogoutRequest logoutRequest = new LogoutRequestBuilder().buildObject();
-
-        logoutRequest.setID(SSOUtils.createID());
-        logoutRequest.setDestination(ssoAgentConfiguration.getSAML2().getIdPURL());
-
-        DateTime issueInstant = new DateTime();
-        logoutRequest.setIssueInstant(issueInstant);
-        //  Time at which the request expires, after which the recipient may discard the message
-        logoutRequest.setNotOnOrAfter(new DateTime(issueInstant.getMillis() + (5 * 60 * 1000)));
-
-        Issuer issuer = new IssuerBuilder().buildObject();
-        issuer.setValue(ssoAgentConfiguration.getSAML2().getSPEntityId());
-        logoutRequest.setIssuer(issuer);
-
-        NameID nameId = new NameIDBuilder().buildObject();
-        nameId.setFormat("urn:oasis:names:tc:SAML:2.0:nameid-format:entity");
-        nameId.setValue(user);
-        logoutRequest.setNameID(nameId);
-
-        SessionIndex sessionIndexElement = new SessionIndexBuilder().buildObject();
-        sessionIndexElement.setSessionIndex(sessionIndex);
-        logoutRequest.getSessionIndexes().add(sessionIndexElement);
-
-        //  Indicates the reason for the logout
-        logoutRequest.setReason("Single Logout");
-
-        return logoutRequest;
     }
 }

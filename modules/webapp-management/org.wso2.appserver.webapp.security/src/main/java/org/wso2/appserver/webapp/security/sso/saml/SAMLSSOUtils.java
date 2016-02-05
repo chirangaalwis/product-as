@@ -108,6 +108,16 @@ public class SAMLSSOUtils {
     private static final Logger logger = Logger.getLogger(SAMLSSOUtils.class.getName());
     private static boolean isBootStrapped;
 
+    static {
+        try {
+            System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+                    "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+            doBootstrap();
+        } catch (SSOException e) {
+            logger.log(Level.SEVERE, "An error occurred when bootstrapping the OpenSAML library");
+        }
+    }
+
     /**
      * Prevents instantiating the SAMLSSOUtils class.
      */
@@ -258,8 +268,6 @@ public class SAMLSSOUtils {
     public static String marshall(XMLObject xmlObject) throws SSOException {
         try {
             //  Explicitly sets the special XML parser library to be used, in the global variables
-            System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
-                    "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
             MarshallerFactory marshallerFactory = Configuration.getMarshallerFactory();
             Marshaller marshaller = marshallerFactory.getMarshaller(xmlObject);
             Element element = marshaller.marshall(xmlObject);
@@ -284,7 +292,6 @@ public class SAMLSSOUtils {
      * @throws SSOException if an error occurs when unmarshalling the XML string representation
      */
     public static XMLObject unmarshall(String xmlString) throws SSOException {
-        doBootstrap();
         try {
             DocumentBuilder docBuilder = SSOUtils.getDocumentBuilder(false, true, Optional.of(new XMLEntityResolver()));
             ByteArrayInputStream inputStream = new ByteArrayInputStream(xmlString.getBytes(Charset.forName("UTF-8")));
@@ -378,7 +385,6 @@ public class SAMLSSOUtils {
      */
     protected static AuthnRequest setSignature(AuthnRequest authnRequest, String signatureAlgorithm,
             X509Credential credential) throws SSOException {
-        doBootstrap();
         try {
             Signature signature = setSignatureRaw(signatureAlgorithm, credential);
             authnRequest.setSignature(signature);
@@ -473,7 +479,6 @@ public class SAMLSSOUtils {
      * @throws SSOException if an error occurs while retrieving the builder for the fully qualified name
      */
     private static XMLObject buildXMLObject(QName objectQualifiedName) throws SSOException {
-        doBootstrap();
         XMLObjectBuilder builder = org.opensaml.xml.Configuration.getBuilderFactory().getBuilder(objectQualifiedName);
         if (builder == null) {
             throw new SSOException("Unable to retrieve builder for object QName " + objectQualifiedName);
@@ -491,7 +496,6 @@ public class SAMLSSOUtils {
      */
     protected static void addDeflateSignatureToHTTPQueryString(StringBuilder httpQueryString, X509Credential credential)
             throws SSOException {
-        doBootstrap();
         try {
             httpQueryString.append("&SigAlg=").
                     append(URLEncoder.encode(XMLSignature.ALGO_ID_SIGNATURE_RSA, "UTF-8").trim());
