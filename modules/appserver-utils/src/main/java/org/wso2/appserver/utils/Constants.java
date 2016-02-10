@@ -24,7 +24,17 @@ public class Constants {
     //  Environmental variable property name constant
     public static final String CATALINA_BASE = "catalina.base";
     //  File path related constants
-    protected static final String WSO2AS_CONFIG_FILE_NAME = "wso2as-web.xml";
     protected static final String TOMCAT_CONFIGURATION_FOLDER_NAME = "conf";
     protected static final String WSO2_CONFIGURATION_FOLDER_NAME = "wso2";
+    protected static final String WSO2AS_CONFIG_FILE_NAME = "wso2as-web.xml";
+
+    public static class SingleSignOnConfigurationConstants {
+        public static final String REQUEST_URL_POSTFIX = "requestURLPostFix";
+        public static final String ISSUER_ID = "issuerId";
+        public static final String ACS_URL = "consumerURL";
+        public static final String IDP_ENTITY_ID = "idpEntityId";
+        public static final String IDP_URL = "idpURL";
+        public static final String ATTRIBUTE_CONSUMING_SERVICE_INDEX = "attributeConsumingServiceIndex";
+        public static final String SLO_URL_POSTFIX = "sloURLPostFix";
+    }
 }

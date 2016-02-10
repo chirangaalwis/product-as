@@ -25,7 +25,7 @@ import java.nio.file.Paths;
  */
 public class PathUtils {
     /**
-     * Returns a {@code Path} instance representing the base of Apache Tomcat instances.
+     * Returns a representation of the base of Apache Tomcat instances.
      *
      * @return a {@link Path} instance representing the base of Apache Tomcat instances
      * @throws AppServerException if CATALINA_BASE environmental variable has not been set
@@ -40,7 +40,7 @@ public class PathUtils {
     }
 
     /**
-     * Returns a {@code Path} instance representing the Apache Tomcat configuration home.
+     * Returns a representation of the Apache Tomcat configuration home.
      *
      * @return a {@link Path} instance representing the Apache Tomcat configuration home
      * @throws AppServerException if CATALINA_BASE environmental variable has not been set
@@ -51,7 +51,7 @@ public class PathUtils {
     }
 
     /**
-     * Returns a {@code Path} instance representing the WSO2 Application Server's WSO2-specific configuration home.
+     * Returns a representation of the Application Server's WSO2-specific configuration home.
      *
      * @return a {@link Path} instance representing the WSO2 Application Server's WSO2-specific configuration home
      * @throws AppServerException if CATALINA_BASE environmental variable has not been set
@@ -62,8 +62,7 @@ public class PathUtils {
     }
 
     /**
-     * Returns a {@code Path} instance representing the WSO2 Application Server's WSO2-specific global configuration
-     * file.
+     * Returns a representation of the Application Server's WSO2-specific global configuration file.
      *
      * @return a {@link Path} instance representing the WSO2 Application Server's WSO2-specific global configuration
      * file
