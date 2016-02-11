@@ -15,15 +15,16 @@
  */
 package org.wso2.appserver.utils.bean;
 
-import org.wso2.appserver.utils.AppServerException;
 import org.wso2.appserver.utils.Constants;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * A class which represents a holder for global, Application Server configurations specified by the WSO2 specific
@@ -50,51 +51,105 @@ public class GlobalConfiguration {
         return classLoadingConfiguration;
     }
 
-    public void verifyConfiguration() throws AppServerException {
-        SingleSignOnConfiguration.SAML saml = singleSignOnConfiguration.saml;
-        if (saml.enableSSO && (saml.requestURLPostFix == null)) {
-            throw new AppServerException(
-                    Constants.SingleSignOnConfigurationConstants.REQUEST_URL_POSTFIX + " not configured");
-        }
+    public void initConfiguration(Map<String, String> ssoConfigurations, Map<String, List<String>> environments) {
+        Optional.ofNullable(ssoConfigurations).ifPresent(propertyConfigurations -> {
+            String uris = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SKIP_URIS, null);
+            Optional.ofNullable(uris).ifPresent(uriReferences -> Stream.of(uriReferences.split(",")).
+                    forEach(singleSignOnConfiguration.skipURIs::add));
 
-        if (saml.enableSSO && (saml.issuerId == null)) {
-            throw new AppServerException("\'" +
-                    Constants.SingleSignOnConfigurationConstants.ISSUER_ID + "\' not configured");
-        }
+            String handleConsumerURLAfterSLOString = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.HANDLE_CONSUMER_URL_AFTER_SLO, "true");
+            singleSignOnConfiguration.handleConsumerURLAfterSLO = Boolean.parseBoolean(handleConsumerURLAfterSLOString);
 
-        if (saml.enableSSO && (saml.acsURL == null)) {
-            throw new AppServerException("\'" +
-                    Constants.SingleSignOnConfigurationConstants.ACS_URL + "\' not configured");
-        }
+            singleSignOnConfiguration.applicationServerURL = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.APPLICATION_SERVER_URL,
+                            Constants.SingleSignOnConfigurationConstants.APPLICATION_SERVER_URL_DEFAULT);
 
-        if (saml.enableSSO && (saml.idpEntityId == null)) {
-            throw new AppServerException("\'" +
-                    Constants.SingleSignOnConfigurationConstants.IDP_ENTITY_ID + "\' not configured");
-        }
+            singleSignOnConfiguration.loginURL = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.LOGIN_URL,
+                            Constants.SingleSignOnConfigurationConstants.LOGIN_URL_DEFAULT);
 
-        if (saml.enableSSO && (saml.idPURL == null)) {
-            throw new AppServerException("\'" +
-                    Constants.SingleSignOnConfigurationConstants.IDP_URL + "\' not configured");
-        }
+            String isSAMLSSOEnabledString = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_SAML_SSO, "false");
+            singleSignOnConfiguration.saml.enableSSO = Boolean.parseBoolean(isSAMLSSOEnabledString);
 
-        if (saml.enableSSO && (saml.attributeConsumingServiceIndex == null)) {
-            logger.log(Level.FINE,
-                    "\'" + Constants.SingleSignOnConfigurationConstants.ATTRIBUTE_CONSUMING_SERVICE_INDEX +
-                            "\' not configured. No attributes of the Subject will be requested");
-        }
+            singleSignOnConfiguration.saml.idPURL = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_URL,
+                            Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_URL_DEFAULT);
+            singleSignOnConfiguration.saml.idpEntityId = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_ENTITY_ID,
+                            Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_ENTITY_ID_DEFAULT);
 
-        if (saml.enableSSO && saml.enableSLO && saml.sloURLPostFix == null) {
-            throw new AppServerException(
-                    "Single Logout enabled, but " + Constants.SingleSignOnConfigurationConstants.SLO_URL_POSTFIX +
-                            " not configured");
-        }
+            singleSignOnConfiguration.saml.httpBinding = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.BINDING_TYPE,
+                            Constants.SingleSignOnConfigurationConstants.SAMLConstants.BINDING_TYPE_DEFAULT);
 
-        if (saml.enableSSO && (saml.enableRequestSigning || saml.enableResponseSigning || saml.enableAssertionSigning
-                || saml.enableAssertionEncryption) && (saml.keystorePath == null || saml.keystorePassword == null
-                || saml.idpCertificateAlias == null || saml.privateKeyAlias == null
-                || saml.privateKeyPassword == null)) {
-            throw new AppServerException("Invalid configuration for the application of digital signature");
-        }
+            singleSignOnConfiguration.saml.attributeConsumingServiceIndex = propertyConfigurations.getOrDefault(
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ATT_CONSUMING_SERVICE_INDEX,
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ATT_CONSUMING_SERVICE_INDEX_DEFAULT);
+
+            String enableSLOString = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_SLO, "true");
+            singleSignOnConfiguration.saml.enableSLO = Boolean.parseBoolean(enableSLOString);
+
+            singleSignOnConfiguration.saml.consumerURLPostFix = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.CONSUMER_URL_POSTFIX,
+                            Constants.SingleSignOnConfigurationConstants.SAMLConstants.CONSUMER_URL_POSTFIX_DEFAULT);
+            singleSignOnConfiguration.saml.requestURLPostFix = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.REQUEST_URL_POSTFIX,
+                            Constants.SingleSignOnConfigurationConstants.SAMLConstants.REQUEST_URL_POSTFIX_DEFAULT);
+            singleSignOnConfiguration.saml.sloURLPostFix = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.SLO_URL_POSTFIX,
+                            Constants.SingleSignOnConfigurationConstants.SAMLConstants.SLO_URL_POSTFIX_DEFAULT);
+
+            String enableAssertionEncryptionString = propertyConfigurations.getOrDefault(
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_ASSERTION_ENCRYPTION, "false");
+            singleSignOnConfiguration.saml.enableAssertionEncryption = Boolean.
+                    parseBoolean(enableAssertionEncryptionString);
+            String enableAssertionSigningString = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_ASSERTION_SIGNING,
+                            "true");
+            singleSignOnConfiguration.saml.enableAssertionSigning = Boolean.parseBoolean(enableAssertionSigningString);
+            String enableRequestSigningString = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_REQUEST_SIGNING,
+                            "true");
+            singleSignOnConfiguration.saml.enableRequestSigning = Boolean.parseBoolean(enableRequestSigningString);
+            String enableResponseSigningString = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_RESPONSE_SIGNING,
+                            "true");
+            singleSignOnConfiguration.saml.enableResponseSigning = Boolean.parseBoolean(enableResponseSigningString);
+
+            singleSignOnConfiguration.saml.signatureValidatorImplClass = propertyConfigurations.getOrDefault(
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.SIGNATURE_VALIDATOR_IMPL_CLASS,
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.SIGNATURE_VALIDATOR_IMPL_CLASS_DEFAULT);
+            singleSignOnConfiguration.saml.additionalRequestParams = propertyConfigurations.getOrDefault(
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ADDITIONAL_REQUEST_PARAMETERS,
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ADDITIONAL_REQUEST_PARAMETERS_DEFAULT);
+
+            String enableForceAuthnString = propertyConfigurations
+                    .getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.FORCE_AUTHN, "false");
+            singleSignOnConfiguration.saml.isForceAuthn = Boolean.parseBoolean(enableForceAuthnString);
+            String enablePassiveAuthnString = propertyConfigurations
+                    .getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.PASSIVE_AUTHN, "false");
+            singleSignOnConfiguration.saml.isPassiveAuthn = Boolean.parseBoolean(enablePassiveAuthnString);
+
+            singleSignOnConfiguration.saml.keystorePath = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.KEYSTORE_PATH, null);
+            singleSignOnConfiguration.saml.keystorePassword = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.KEYSTORE_PASSWORD, null);
+            singleSignOnConfiguration.saml.idpCertificateAlias = propertyConfigurations.getOrDefault(
+                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_PUBLIC_CERTIFICATE_ALIAS, null);
+            singleSignOnConfiguration.saml.privateKeyAlias = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.SP_PRIVATE_KEY_ALIAS, null);
+            singleSignOnConfiguration.saml.privateKeyPassword = propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.SP_PRIVATE_KEY_PASSWORD,
+                            null);
+
+            Optional.ofNullable(environments).ifPresent(
+                    classLoadingEnvironments -> classLoadingEnvironments.entrySet().stream().forEach(
+                            entry -> classLoadingConfiguration.environments.put(entry.getKey(), entry.getValue())));
+        });
     }
 
     /**
@@ -104,6 +159,7 @@ public class GlobalConfiguration {
         private Set<String> skipURIs;
         private String applicationServerURL;
         private boolean handleConsumerURLAfterSLO;
+        private String loginURL;
         private SAML saml;
 
         /**
@@ -126,6 +182,10 @@ public class GlobalConfiguration {
             return applicationServerURL;
         }
 
+        public String getLoginURL() {
+            return loginURL;
+        }
+
         public SAML getSaml() {
             return saml;
         }
@@ -138,8 +198,6 @@ public class GlobalConfiguration {
             private String idPURL;
             private String idpEntityId;
             private String httpBinding;
-            private String issuerId;
-            private String acsURL;
             private String attributeConsumingServiceIndex;
             private boolean enableSLO;
             private String consumerURLPostFix;
@@ -179,14 +237,6 @@ public class GlobalConfiguration {
 
             public String getHttpBinding() {
                 return httpBinding;
-            }
-
-            public String getACSURL() {
-                return acsURL;
-            }
-
-            public String getIssuerId() {
-                return issuerId;
             }
 
             public String getAttributeConsumingServiceIndex() {
@@ -267,13 +317,13 @@ public class GlobalConfiguration {
      * A nested class which defines class loading related configurations.
      */
     public static class ClassLoadingConfiguration {
-        private Map<String, String> environments;
+        private Map<String, List<String>> environments;
 
-        private ClassLoadingConfiguration() {
-            environments = new HashMap<>();
+        public ClassLoadingConfiguration() {
+            this.environments = new HashMap<>();
         }
 
-        public Map<String, String> getEnvironments() {
+        public Map<String, List<String>> getEnvironments() {
             return environments;
         }
     }
