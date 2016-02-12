@@ -15,8 +15,6 @@
  */
 package org.wso2.appserver.utils;
 
-import java.util.List;
-
 /**
  * This class defines WSO2 Application Server specific utility constants.
  *
@@ -39,6 +37,7 @@ public class Constants {
 
     public static class SingleSignOnConfigurationConstants {
         public static final String SKIP_URIS = "skipURIs";
+        public static final String SKIP_URI = "skipURI";
         public static final String HANDLE_CONSUMER_URL_AFTER_SLO = "handleConsumerURLAfterSLO";
         public static final String APPLICATION_SERVER_URL = "applicationServerURL";
         public static final String APPLICATION_SERVER_URL_DEFAULT = "https://localhost:8443";
@@ -52,7 +51,7 @@ public class Constants {
         }
 
         public static class SAMLConstants {
-            public static final String ENABLE_SAML_SSO = "enableSSO";
+            public static final String ENABLE_SAML_SSO = "enableSAMLSSO";
             public static final String IDP_URL = "idpURL";
             public static final String IDP_URL_DEFAULT = "https://localhost:9443/samlsso";
             public static final String IDP_ENTITY_ID = "idpEntityId";
@@ -81,9 +80,9 @@ public class Constants {
             public static final String ADDITIONAL_REQUEST_PARAMETERS_DEFAULT = "&forceAuth=true";
             public static final String FORCE_AUTHN = "isForceAuthn";
             public static final String PASSIVE_AUTHN = "isPassiveAuthn";
-            public static final String KEYSTORE_PATH = "keyStorePath";
-            public static final String KEYSTORE_PASSWORD = "keyStorePassword";
-            public static final String IDP_PUBLIC_CERTIFICATE_ALIAS = "idpCertAlias";
+            public static final String KEYSTORE_PATH = "keystorePath";
+            public static final String KEYSTORE_PASSWORD = "keystorePassword";
+            public static final String IDP_PUBLIC_CERTIFICATE_ALIAS = "idpCertificateAlias";
             public static final String SP_PRIVATE_KEY_ALIAS = "privateKeyAlias";
             public static final String SP_PRIVATE_KEY_PASSWORD = "privateKeyPassword";
 
@@ -93,6 +92,15 @@ public class Constants {
             private SAMLConstants() {
             }
         }
+    }
 
+    public static class ClassLoadingConfigurationConstants {
+        public static final String ENVIRONMENTS = "environments";
+
+        /**
+         * Prevents initiating the ClassLoadingConfigurationConstants nested class.
+         */
+        private ClassLoadingConfigurationConstants() {
+        }
     }
 }

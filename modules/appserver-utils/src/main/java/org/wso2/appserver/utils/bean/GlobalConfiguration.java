@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * A class which represents a holder for global, Application Server configurations specified by the WSO2 specific
@@ -33,8 +31,6 @@ import java.util.stream.Stream;
  * @since 6.0.0
  */
 public class GlobalConfiguration {
-    private static final Logger logger = Logger.getLogger(GlobalConfiguration.class.getName());
-
     private SingleSignOnConfiguration singleSignOnConfiguration;
     private ClassLoadingConfiguration classLoadingConfiguration;
 
@@ -51,101 +47,103 @@ public class GlobalConfiguration {
         return classLoadingConfiguration;
     }
 
-    public void initConfiguration(Map<String, String> ssoConfigurations, Map<String, List<String>> environments) {
+    @SuppressWarnings("unchecked")
+    public void initConfiguration(Map<String, Object> ssoConfigurations) {
         Optional.ofNullable(ssoConfigurations).ifPresent(propertyConfigurations -> {
-            String uris = propertyConfigurations.
+            singleSignOnConfiguration.skipURIs = (Set<String>) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SKIP_URIS, null);
-            Optional.ofNullable(uris).ifPresent(uriReferences -> Stream.of(uriReferences.split(",")).
-                    forEach(singleSignOnConfiguration.skipURIs::add));
 
-            String handleConsumerURLAfterSLOString = propertyConfigurations.
+            String handleConsumerURLAfterSLOString = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.HANDLE_CONSUMER_URL_AFTER_SLO, "true");
             singleSignOnConfiguration.handleConsumerURLAfterSLO = Boolean.parseBoolean(handleConsumerURLAfterSLOString);
 
-            singleSignOnConfiguration.applicationServerURL = propertyConfigurations.
+            singleSignOnConfiguration.applicationServerURL = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.APPLICATION_SERVER_URL,
                             Constants.SingleSignOnConfigurationConstants.APPLICATION_SERVER_URL_DEFAULT);
 
-            singleSignOnConfiguration.loginURL = propertyConfigurations.
+            singleSignOnConfiguration.loginURL = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.LOGIN_URL,
                             Constants.SingleSignOnConfigurationConstants.LOGIN_URL_DEFAULT);
 
-            String isSAMLSSOEnabledString = propertyConfigurations.
+            String isSAMLSSOEnabledString = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_SAML_SSO, "false");
             singleSignOnConfiguration.saml.enableSSO = Boolean.parseBoolean(isSAMLSSOEnabledString);
 
-            singleSignOnConfiguration.saml.idPURL = propertyConfigurations.
+            singleSignOnConfiguration.saml.idPURL = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_URL,
                             Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_URL_DEFAULT);
-            singleSignOnConfiguration.saml.idpEntityId = propertyConfigurations.
+            singleSignOnConfiguration.saml.idpEntityId = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_ENTITY_ID,
                             Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_ENTITY_ID_DEFAULT);
 
-            singleSignOnConfiguration.saml.httpBinding = propertyConfigurations.
+            singleSignOnConfiguration.saml.httpBinding = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.BINDING_TYPE,
                             Constants.SingleSignOnConfigurationConstants.SAMLConstants.BINDING_TYPE_DEFAULT);
 
-            singleSignOnConfiguration.saml.attributeConsumingServiceIndex = propertyConfigurations.getOrDefault(
-                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ATT_CONSUMING_SERVICE_INDEX,
-                    Constants.SingleSignOnConfigurationConstants.SAMLConstants.ATT_CONSUMING_SERVICE_INDEX_DEFAULT);
+            singleSignOnConfiguration.saml.attributeConsumingServiceIndex = (String) propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ATT_CONSUMING_SERVICE_INDEX,
+                            Constants.SingleSignOnConfigurationConstants.
+                                    SAMLConstants.ATT_CONSUMING_SERVICE_INDEX_DEFAULT);
 
-            String enableSLOString = propertyConfigurations.
+            String enableSLOString = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_SLO, "true");
             singleSignOnConfiguration.saml.enableSLO = Boolean.parseBoolean(enableSLOString);
 
-            singleSignOnConfiguration.saml.consumerURLPostFix = propertyConfigurations.
+            singleSignOnConfiguration.saml.consumerURLPostFix = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.CONSUMER_URL_POSTFIX,
                             Constants.SingleSignOnConfigurationConstants.SAMLConstants.CONSUMER_URL_POSTFIX_DEFAULT);
-            singleSignOnConfiguration.saml.requestURLPostFix = propertyConfigurations.
+            singleSignOnConfiguration.saml.requestURLPostFix = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.REQUEST_URL_POSTFIX,
                             Constants.SingleSignOnConfigurationConstants.SAMLConstants.REQUEST_URL_POSTFIX_DEFAULT);
-            singleSignOnConfiguration.saml.sloURLPostFix = propertyConfigurations.
+            singleSignOnConfiguration.saml.sloURLPostFix = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.SLO_URL_POSTFIX,
                             Constants.SingleSignOnConfigurationConstants.SAMLConstants.SLO_URL_POSTFIX_DEFAULT);
 
-            String enableAssertionEncryptionString = propertyConfigurations.getOrDefault(
+            String enableAssertionEncryptionString = (String) propertyConfigurations.getOrDefault(
                     Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_ASSERTION_ENCRYPTION, "false");
             singleSignOnConfiguration.saml.enableAssertionEncryption = Boolean.
                     parseBoolean(enableAssertionEncryptionString);
-            String enableAssertionSigningString = propertyConfigurations.
+            String enableAssertionSigningString = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_ASSERTION_SIGNING,
                             "true");
             singleSignOnConfiguration.saml.enableAssertionSigning = Boolean.parseBoolean(enableAssertionSigningString);
-            String enableRequestSigningString = propertyConfigurations.
+            String enableRequestSigningString = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_REQUEST_SIGNING,
                             "true");
             singleSignOnConfiguration.saml.enableRequestSigning = Boolean.parseBoolean(enableRequestSigningString);
-            String enableResponseSigningString = propertyConfigurations.
+            String enableResponseSigningString = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.ENABLE_RESPONSE_SIGNING,
                             "true");
             singleSignOnConfiguration.saml.enableResponseSigning = Boolean.parseBoolean(enableResponseSigningString);
 
-            singleSignOnConfiguration.saml.signatureValidatorImplClass = propertyConfigurations.getOrDefault(
+            singleSignOnConfiguration.saml.signatureValidatorImplClass = (String) propertyConfigurations.getOrDefault(
                     Constants.SingleSignOnConfigurationConstants.SAMLConstants.SIGNATURE_VALIDATOR_IMPL_CLASS,
                     Constants.SingleSignOnConfigurationConstants.SAMLConstants.SIGNATURE_VALIDATOR_IMPL_CLASS_DEFAULT);
-            singleSignOnConfiguration.saml.additionalRequestParams = propertyConfigurations.getOrDefault(
+            singleSignOnConfiguration.saml.additionalRequestParams = (String) propertyConfigurations.getOrDefault(
                     Constants.SingleSignOnConfigurationConstants.SAMLConstants.ADDITIONAL_REQUEST_PARAMETERS,
                     Constants.SingleSignOnConfigurationConstants.SAMLConstants.ADDITIONAL_REQUEST_PARAMETERS_DEFAULT);
 
-            String enableForceAuthnString = propertyConfigurations
-                    .getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.FORCE_AUTHN, "false");
+            String enableForceAuthnString = (String) propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.FORCE_AUTHN, "false");
             singleSignOnConfiguration.saml.isForceAuthn = Boolean.parseBoolean(enableForceAuthnString);
-            String enablePassiveAuthnString = propertyConfigurations
-                    .getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.PASSIVE_AUTHN, "false");
+            String enablePassiveAuthnString = (String) propertyConfigurations.
+                    getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.PASSIVE_AUTHN, "false");
             singleSignOnConfiguration.saml.isPassiveAuthn = Boolean.parseBoolean(enablePassiveAuthnString);
 
-            singleSignOnConfiguration.saml.keystorePath = propertyConfigurations.
+            singleSignOnConfiguration.saml.keystorePath = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.KEYSTORE_PATH, null);
-            singleSignOnConfiguration.saml.keystorePassword = propertyConfigurations.
+            singleSignOnConfiguration.saml.keystorePassword = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.KEYSTORE_PASSWORD, null);
-            singleSignOnConfiguration.saml.idpCertificateAlias = propertyConfigurations.getOrDefault(
+            singleSignOnConfiguration.saml.idpCertificateAlias = (String) propertyConfigurations.getOrDefault(
                     Constants.SingleSignOnConfigurationConstants.SAMLConstants.IDP_PUBLIC_CERTIFICATE_ALIAS, null);
-            singleSignOnConfiguration.saml.privateKeyAlias = propertyConfigurations.
+            singleSignOnConfiguration.saml.privateKeyAlias = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.SP_PRIVATE_KEY_ALIAS, null);
-            singleSignOnConfiguration.saml.privateKeyPassword = propertyConfigurations.
+            singleSignOnConfiguration.saml.privateKeyPassword = (String) propertyConfigurations.
                     getOrDefault(Constants.SingleSignOnConfigurationConstants.SAMLConstants.SP_PRIVATE_KEY_PASSWORD,
                             null);
 
+            Map<String, List<String>> environments = (Map<String, List<String>>) propertyConfigurations.
+                    getOrDefault(Constants.ClassLoadingConfigurationConstants.ENVIRONMENTS, null);
             Optional.ofNullable(environments).ifPresent(
                     classLoadingEnvironments -> classLoadingEnvironments.entrySet().stream().forEach(
                             entry -> classLoadingConfiguration.environments.put(entry.getKey(), entry.getValue())));

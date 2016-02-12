@@ -24,4 +24,8 @@ public class AppServerException extends Exception {
     public AppServerException(String message) {
         super(message);
     }
+
+    public AppServerException(String message, Throwable rootCause) {
+        super(message, rootCause);
+    }
 }
