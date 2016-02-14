@@ -80,7 +80,7 @@ public class PathUtils {
      * file
      * @throws AppServerException if CATALINA_BASE environmental variable has not been set
      */
-    protected static Path getWSO2GlobalConfigurationSchemaFile() throws AppServerException {
+    public static Path getWSO2GlobalConfigurationSchemaFile() throws AppServerException {
         return Paths.get(getWSO2ConfigurationHome().toString(), Constants.WSO2_CONFIG_XML_SCHEMA_FILE_NAME);
     }
 }

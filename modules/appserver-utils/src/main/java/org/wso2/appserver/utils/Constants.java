@@ -39,6 +39,9 @@ public class Constants {
     //  wso2as-web.xml file root element tag name
     public static final String WSO2_CONFIG_XML_ROOT_ELEMENT = "wso2asWeb";
 
+    /**
+     * A nested class which defines constants for Application Server single-sign-on (SSO).
+     */
     public static class SSOConfigurationConstants {
         public static final String SINGLE_SIGN_ON = "singleSignOn";
         public static final String SKIP_URI = "skipURI";
@@ -51,6 +54,9 @@ public class Constants {
         private SSOConfigurationConstants() {
         }
 
+        /**
+         * A nested class which defines SAML specific configuration constants for Application Server SSO.
+         */
         public static class SAMLConstants {
             public static final String IDP_URL_DEFAULT = "https://localhost:9443/samlsso";
             public static final String IDP_ENTITY_ID_DEFAULT = "localhost";
@@ -59,7 +65,8 @@ public class Constants {
             public static final String CONSUMER_URL_POSTFIX_DEFAULT = "/acs";
             public static final String REQUEST_URL_POSTFIX_DEFAULT = "samlsso";
             public static final String SLO_URL_POSTFIX_DEFAULT = "logout";
-            public static final String SIGNATURE_VALIDATOR_IMPL_CLASS_DEFAULT = "org.wso2.appserver.webapp.security.sso.saml.signature.SAMLSignatureValidatorImplementation";
+            public static final String SIGNATURE_VALIDATOR_IMPL_CLASS_DEFAULT =
+                    "org.wso2.appserver.webapp.security.sso.saml.signature.SAMLSignatureValidatorImplementation";
             public static final String ADDITIONAL_REQUEST_PARAMETERS_DEFAULT = "&forceAuth=true";
 
             /**

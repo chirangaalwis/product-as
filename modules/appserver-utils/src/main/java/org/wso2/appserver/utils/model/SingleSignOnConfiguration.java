@@ -34,7 +34,7 @@ public class SingleSignOnConfiguration {
     @XmlElement(namespace = Constants.WSO2_NAMESPACE)
     private String applicationServerURL;
     @XmlElement(namespace = Constants.WSO2_NAMESPACE)
-    private boolean handleConsumerURLAfterSLO;
+    private Boolean handleConsumerURLAfterSLO;
     @XmlElement(namespace = Constants.WSO2_NAMESPACE)
     private String loginURL;
     @XmlElement(namespace = Constants.WSO2_NAMESPACE)
@@ -44,22 +44,41 @@ public class SingleSignOnConfiguration {
         return skipURIs;
     }
 
+    public void setSkipURIs(SkipURIs skipURIs) {
+        this.skipURIs = skipURIs;
+    }
+
     public String getApplicationServerURL() {
         return applicationServerURL;
     }
 
-    public boolean isHandleConsumerURLAfterSLO() {
+    public void setApplicationServerURL(String applicationServerURL) {
+        this.applicationServerURL = applicationServerURL;
+    }
+
+    public Boolean handleConsumerURLAfterSLO() {
         return handleConsumerURLAfterSLO;
+    }
+
+    public void setHandleConsumerURLAfterSLO(Boolean handleConsumerURLAfterSLO) {
+        this.handleConsumerURLAfterSLO = handleConsumerURLAfterSLO;
     }
 
     public String getLoginURL() {
         return loginURL;
     }
 
-    public SAML getSaml() {
+    public SAML getSAML() {
         return saml;
     }
 
+    public void setSAML(SAML saml) {
+        this.saml = saml;
+    }
+
+    /**
+     * A nested class which models a collection of URIs to skip during single-sign-on (SSO).
+     */
     @XmlAccessorType(XmlAccessType.FIELD)
     public static class SkipURIs {
         @XmlElement(name = Constants.SSOConfigurationConstants.SKIP_URI, namespace = Constants.WSO2_NAMESPACE)
@@ -120,72 +139,140 @@ public class SingleSignOnConfiguration {
         @XmlElement(namespace = Constants.WSO2_NAMESPACE)
         private String privateKeyPassword;
 
-        public String getSloURLPostFix() {
-            return sloURLPostFix;
+        public Boolean isSAMLSSOEnabled() {
+            return enableSAMLSSO;
         }
 
-        public Boolean getEnableSAMLSSO() {
-            return enableSAMLSSO;
+        public void setEnableSAMLSSO(Boolean enableSAMLSSO) {
+            this.enableSAMLSSO = enableSAMLSSO;
         }
 
         public String getIdpURL() {
             return idpURL;
         }
 
+        public void setIdpURL(String idpURL) {
+            this.idpURL = idpURL;
+        }
+
         public String getIdpEntityId() {
             return idpEntityId;
+        }
+
+        public void setIdpEntityId(String idpEntityId) {
+            this.idpEntityId = idpEntityId;
         }
 
         public String getIssuerId() {
             return issuerId;
         }
 
+        public void setIssuerId(String issuerId) {
+            this.issuerId = issuerId;
+        }
+
         public String getConsumerURL() {
             return consumerURL;
+        }
+
+        public void setConsumerURL(String consumerURL) {
+            this.consumerURL = consumerURL;
         }
 
         public String getHttpBinding() {
             return httpBinding;
         }
 
+        public void setHttpBinding(String httpBinding) {
+            this.httpBinding = httpBinding;
+        }
+
         public String getAttributeConsumingServiceIndex() {
             return attributeConsumingServiceIndex;
         }
 
-        public Boolean getEnableSLO() {
+        public void setAttributeConsumingServiceIndex(String attributeConsumingServiceIndex) {
+            this.attributeConsumingServiceIndex = attributeConsumingServiceIndex;
+        }
+
+        public Boolean isSLOEnabled() {
             return enableSLO;
+        }
+
+        public void setEnableSLO(Boolean enableSLO) {
+            this.enableSLO = enableSLO;
         }
 
         public String getConsumerURLPostFix() {
             return consumerURLPostFix;
         }
 
+        public void setConsumerURLPostFix(String consumerURLPostFix) {
+            this.consumerURLPostFix = consumerURLPostFix;
+        }
+
         public String getRequestURLPostFix() {
             return requestURLPostFix;
         }
 
-        public Boolean getEnableResponseSigning() {
+        public void setRequestURLPostFix(String requestURLPostFix) {
+            this.requestURLPostFix = requestURLPostFix;
+        }
+
+        public String getSLOURLPostFix() {
+            return sloURLPostFix;
+        }
+
+        public void setSLOURLPostFix(String sloURLPostFix) {
+            this.sloURLPostFix = sloURLPostFix;
+        }
+
+        public Boolean isResponseSigningEnabled() {
             return enableResponseSigning;
         }
 
-        public Boolean getEnableAssertionSigning() {
+        public void setEnableResponseSigning(Boolean enableResponseSigning) {
+            this.enableResponseSigning = enableResponseSigning;
+        }
+
+        public Boolean isAssertionSigningEnabled() {
             return enableAssertionSigning;
         }
 
-        public Boolean getEnableAssertionEncryption() {
+        public void setEnableAssertionSigning(Boolean enableAssertionSigning) {
+            this.enableAssertionSigning = enableAssertionSigning;
+        }
+
+        public Boolean isAssertionEncryptionEnabled() {
             return enableAssertionEncryption;
         }
 
-        public Boolean getEnableRequestSigning() {
+        public void setEnableAssertionEncryption(Boolean enableAssertionEncryption) {
+            this.enableAssertionEncryption = enableAssertionEncryption;
+        }
+
+        public Boolean isRequestSigningEnabled() {
             return enableRequestSigning;
+        }
+
+        public void setEnableRequestSigning(Boolean enableRequestSigning) {
+            this.enableRequestSigning = enableRequestSigning;
         }
 
         public String getSignatureValidatorImplClass() {
             return signatureValidatorImplClass;
         }
 
+        public void setSignatureValidatorImplClass(String signatureValidatorImplClass) {
+            this.signatureValidatorImplClass = signatureValidatorImplClass;
+        }
+
         public String getAdditionalRequestParams() {
             return additionalRequestParams;
+        }
+
+        public void setAdditionalRequestParams(String additionalRequestParams) {
+            this.additionalRequestParams = additionalRequestParams;
         }
 
         public Boolean getIsForceAuthn() {

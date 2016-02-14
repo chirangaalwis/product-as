@@ -26,8 +26,8 @@
     <version>6.0.0-SNAPSHOT</version>
 
     <modules>
-        <module>sample-module</module>
         <module>appserver-utils</module>
+        <module>sample-module</module>
         <!--<module>webapp-loader</module>-->
     </modules>
 
