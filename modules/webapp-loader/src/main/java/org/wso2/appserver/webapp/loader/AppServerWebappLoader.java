@@ -14,7 +14,6 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 package org.wso2.appserver.webapp.loader;
 
@@ -27,7 +26,6 @@ import org.apache.catalina.loader.WebappLoader;
  * @since 6.0.0
  */
 public class AppServerWebappLoader extends WebappLoader {
-
     @SuppressWarnings("unused")
     public AppServerWebappLoader() {
         super();
@@ -45,5 +43,4 @@ public class AppServerWebappLoader extends WebappLoader {
         super.startInternal();
         ((AppServerWebappClassLoader) getClassLoader()).setWebappClassLoaderContext(webappClassLoaderContext);
     }
-
 }

@@ -14,7 +14,6 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations
  * under the License.
- *
  */
 package org.wso2.appserver.webapp.loader;
 
@@ -75,7 +74,7 @@ public class AppServerWebappClassLoader extends WebappClassLoaderBase {
         }
     }
 
-    // adds the jar url to this class loader
+    //  adds the jar url to this class loader
     private void addRepository(String repository) {
         URL url;
         try {
