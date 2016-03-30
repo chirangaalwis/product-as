@@ -30,7 +30,9 @@ import java.security.PrivilegedAction;
 
 /**
  * Customized WebappClassloader for Application Server. This class introduces a new classloader pattern which defines
- * on wso2as-web.xml file. The default behaviour is specified in the container level configuration file.
+ * on wso2as-web.xml file.
+ * <p>
+ * The default behaviour is specified in the container level configuration file.
  * But webapp has the ability to override that behaviour by adding the customised  wso2as-web.xml file into
  * the webapp.
  *
@@ -39,31 +41,29 @@ import java.security.PrivilegedAction;
 public class AppServerWebappClassLoader extends WebappClassLoaderBase {
     private static final Log log = LogFactory.getLog(AppServerWebappClassLoader.class);
 
-    private WebappClassLoaderContext webappClassLoaderContext;
-
     public AppServerWebappClassLoader(ClassLoader parent) {
         super(parent);
     }
 
     /**
-     * Sets the {@link WebappClassLoaderContext} associated with this classloader
+     * Sets the {@link WebappClassLoaderContext} associated with this classloader.
+     *
      * @param classLoaderContext the web application specific classloader context.
      */
     public synchronized void setWebappClassLoaderContext(WebappClassLoaderContext classLoaderContext) {
-        webappClassLoaderContext = classLoaderContext;
+        WebappClassLoaderContext webappClassLoaderContext = classLoaderContext;
         webappClassLoaderContext.getProvidedRepositories().forEach(this::addRepository);
     }
 
     /**
      * Returns a new classloader without any class file transforms.
+     *
      * @return copy of this classloader without any class file transformers.
      */
     public ClassLoader copyWithoutTransformers() {
-
         ClassLoader parent = this.getParent();
         AppServerWebappClassLoader result = AccessController.doPrivileged(
-                (PrivilegedAction<AppServerWebappClassLoader>) () -> new AppServerWebappClassLoader(parent)
-        );
+                (PrivilegedAction<AppServerWebappClassLoader>) () -> new AppServerWebappClassLoader(parent));
 
         super.copyStateWithoutTransformers(result);
 
@@ -77,7 +77,6 @@ public class AppServerWebappClassLoader extends WebappClassLoaderBase {
 
     // adds the jar url to this class loader
     private void addRepository(String repository) {
-
         URL url;
         try {
             url = new URL(repository);
