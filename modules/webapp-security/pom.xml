@@ -19,10 +19,10 @@
         <groupId>org.wso2.appserver</groupId>
         <version>6.0.0-SNAPSHOT</version>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
     <artifactId>webapp-security</artifactId>
     <name>WSO2 Application Server - Module - Webapp Security</name>
     <description>Web application security functions</description>
     <url>http://wso2.com</url>
-
 </project>
