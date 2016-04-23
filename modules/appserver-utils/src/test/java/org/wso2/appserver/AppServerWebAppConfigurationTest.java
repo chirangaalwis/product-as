@@ -28,7 +28,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.appserver.configuration.context.AppServerWebAppConfiguration;
 import org.wso2.appserver.configuration.context.ClassLoaderConfiguration;
-import org.wso2.appserver.configuration.context.SSOConfiguration;
+import org.wso2.appserver.configuration.context.ContextSSOConfiguration;
 import org.wso2.appserver.configuration.context.StatsPublisherConfiguration;
 import org.wso2.appserver.configuration.listeners.ContextConfigurationLoader;
 import org.wso2.appserver.exceptions.ApplicationServerConfigurationException;
@@ -138,10 +138,10 @@ public class AppServerWebAppConfigurationTest {
         return classloading;
     }
 
-    private static SSOConfiguration prepareSSOConfiguration() {
-        SSOConfiguration ssoConfiguration = new SSOConfiguration();
+    private static ContextSSOConfiguration prepareSSOConfiguration() {
+        ContextSSOConfiguration ssoConfiguration = new ContextSSOConfiguration();
 
-        SSOConfiguration.SkipURIs skipURIs = new SSOConfiguration.SkipURIs();
+        ContextSSOConfiguration.SkipURIs skipURIs = new ContextSSOConfiguration.SkipURIs();
         List<String> uris = new ArrayList<>();
         uris.add(TestConstants.SKIP_URI);
         skipURIs.setSkipURIs(uris);
@@ -166,16 +166,16 @@ public class AppServerWebAppConfigurationTest {
         ssoConfiguration.enableForceAuthn(false);
         ssoConfiguration.enablePassiveAuthn(false);
 
-        SSOConfiguration.Property relayState = new SSOConfiguration.Property();
+        ContextSSOConfiguration.Property relayState = new ContextSSOConfiguration.Property();
         relayState.setKey(TestConstants.RELAY_STATE_KEY);
         relayState.setValue(TestConstants.RELAY_STATE_VALUE);
-        SSOConfiguration.Property loginURL = new SSOConfiguration.Property();
+        ContextSSOConfiguration.Property loginURL = new ContextSSOConfiguration.Property();
         loginURL.setKey(TestConstants.LOGIN_URL_KEY);
         loginURL.setValue(TestConstants.LOGIN_URL_VALUE);
-        SSOConfiguration.Property tenantId = new SSOConfiguration.Property();
+        ContextSSOConfiguration.Property tenantId = new ContextSSOConfiguration.Property();
         tenantId.setKey(TestConstants.TENANT_ID_KEY);
         tenantId.setValue(TestConstants.TENANT_ID_VALUE);
-        List<SSOConfiguration.Property> properties = new ArrayList<>();
+        List<ContextSSOConfiguration.Property> properties = new ArrayList<>();
         properties.add(relayState);
         properties.add(loginURL);
         properties.add(tenantId);
@@ -204,7 +204,7 @@ public class AppServerWebAppConfigurationTest {
                 equals(expected.getEnvironments())));
     }
 
-    private static boolean compareSSOConfigurations(SSOConfiguration actual, SSOConfiguration expected) {
+    private static boolean compareSSOConfigurations(ContextSSOConfiguration actual, ContextSSOConfiguration expected) {
         if ((actual != null) && (expected != null)) {
             boolean skipURIs = compareSkipURIs(actual.getSkipURIs(), expected.getSkipURIs());
             boolean handlingConsumerURLAfterSLO = actual.handleConsumerURLAfterSLO().equals(expected.
@@ -232,19 +232,19 @@ public class AppServerWebAppConfigurationTest {
         }
     }
 
-    private static boolean compareSkipURIs(SSOConfiguration.SkipURIs actual, SSOConfiguration.SkipURIs expected) {
+    private static boolean compareSkipURIs(ContextSSOConfiguration.SkipURIs actual, ContextSSOConfiguration.SkipURIs expected) {
         return actual.getSkipURIs().stream().filter(skipURI -> expected.getSkipURIs().stream().
                 filter(uri -> uri.trim().equals(skipURI)).count() > 0).count() == expected.getSkipURIs().size();
     }
 
-    private static boolean compareProperties(List<SSOConfiguration.Property> actual,
-            List<SSOConfiguration.Property> expected) {
+    private static boolean compareProperties(List<ContextSSOConfiguration.Property> actual,
+            List<ContextSSOConfiguration.Property> expected) {
         return actual.stream().filter(property -> expected.stream().
                 filter(exp -> (property.getKey().trim().equals(exp.getKey()) && property.getValue().trim().
                         equals(exp.getValue()))).count() > 0).count() == expected.size();
     }
 
-    private static boolean compareSSLProperties(SSOConfiguration actual, SSOConfiguration expected) {
+    private static boolean compareSSLProperties(ContextSSOConfiguration actual, ContextSSOConfiguration expected) {
         boolean assertionSigning = actual.isAssertionSigningEnabled().equals(expected.isAssertionSigningEnabled());
         boolean assertionEncryption = actual.isAssertionEncryptionEnabled().equals(expected.
                 isAssertionEncryptionEnabled());
@@ -254,7 +254,7 @@ public class AppServerWebAppConfigurationTest {
         return assertionSigning && assertionEncryption && requestSigning && responseSigning;
     }
 
-    private static boolean comparePostfixes(SSOConfiguration actual, SSOConfiguration expected) {
+    private static boolean comparePostfixes(ContextSSOConfiguration actual, ContextSSOConfiguration expected) {
         boolean requestURLPostfix = actual.getRequestURLPostfix().trim().equals(expected.getRequestURLPostfix());
         boolean consumerURLPostfix = actual.getConsumerURLPostfix().trim().equals(expected.getConsumerURLPostfix());
         boolean sloURLPostfix = actual.getSLOURLPostfix().trim().equals(expected.getSLOURLPostfix());

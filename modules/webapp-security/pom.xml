@@ -25,4 +25,19 @@
     <name>WSO2 Application Server - Module - Webapp Security</name>
     <description>Web application security functions</description>
     <url>http://wso2.com</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opensaml</groupId>
+            <artifactId>opensaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.wso2.appserver</groupId>
+            <artifactId>appserver-utils</artifactId>
+        </dependency>
+    </dependencies>
 </project>

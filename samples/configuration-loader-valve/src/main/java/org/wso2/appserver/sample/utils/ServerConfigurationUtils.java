@@ -18,7 +18,7 @@ package org.wso2.appserver.sample.utils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.wso2.appserver.configuration.server.AppServerConfiguration;
 import org.wso2.appserver.configuration.server.ClassLoaderEnvironments;
-import org.wso2.appserver.configuration.server.SSOConfiguration;
+import org.wso2.appserver.configuration.server.ServerSSOConfiguration;
 import org.wso2.appserver.configuration.server.SecurityConfiguration;
 import org.wso2.appserver.configuration.server.StatsPublisherConfiguration;
 
@@ -64,8 +64,8 @@ public class ServerConfigurationUtils {
         return classloadingEnvironments;
     }
 
-    private static SSOConfiguration prepareSSOConfigs() {
-        SSOConfiguration ssoConfiguration = new SSOConfiguration();
+    private static ServerSSOConfiguration prepareSSOConfigs() {
+        ServerSSOConfiguration ssoConfiguration = new ServerSSOConfiguration();
 
         ssoConfiguration.setIdpURL(Constants.IDP_URL);
         ssoConfiguration.setIdpEntityId(Constants.IDP_ENTITY_ID);
@@ -141,7 +141,7 @@ public class ServerConfigurationUtils {
         }
     }
 
-    private static boolean compareSSOConfigurations(SSOConfiguration actual, SSOConfiguration expected) {
+    private static boolean compareSSOConfigurations(ServerSSOConfiguration actual, ServerSSOConfiguration expected) {
         if ((actual != null) && (expected != null)) {
             boolean idpURL = actual.getIdpURL().trim().equals(expected.getIdpURL());
             boolean idpEntityID = actual.getIdpEntityId().trim().equals(expected.getIdpEntityId());
@@ -155,8 +155,8 @@ public class ServerConfigurationUtils {
         }
     }
 
-    private static boolean compareSSOProperties(List<SSOConfiguration.Property> actual,
-            List<SSOConfiguration.Property> expected) {
+    private static boolean compareSSOProperties(List<ServerSSOConfiguration.Property> actual,
+            List<ServerSSOConfiguration.Property> expected) {
         if ((actual != null) && (expected != null)) {
             return actual.stream().filter(property -> expected.stream().
                     filter(expProperty -> ((expProperty.getKey().equals(property.getKey())) && (expProperty.getValue().

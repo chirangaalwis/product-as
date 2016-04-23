@@ -31,7 +31,7 @@ public class AppServerWebAppConfiguration {
     @XmlElement(name = "class-loader")
     private ClassLoaderConfiguration classLoaderConfiguration;
     @XmlElement(name = "saml2-single-sign-on")
-    private SSOConfiguration singleSignOnConfiguration;
+    private ContextSSOConfiguration singleSignOnConfiguration;
     @XmlElement(name = "statistics-publisher")
     private StatsPublisherConfiguration statsPublisherConfiguration;
 
@@ -43,11 +43,11 @@ public class AppServerWebAppConfiguration {
         this.classLoaderConfiguration = classLoaderConfiguration;
     }
 
-    public SSOConfiguration getSingleSignOnConfiguration() {
+    public ContextSSOConfiguration getSingleSignOnConfiguration() {
         return singleSignOnConfiguration;
     }
 
-    public void setSingleSignOnConfiguration(SSOConfiguration singleSignOnConfiguration) {
+    public void setSingleSignOnConfiguration(ContextSSOConfiguration singleSignOnConfiguration) {
         this.singleSignOnConfiguration = singleSignOnConfiguration;
     }
 
