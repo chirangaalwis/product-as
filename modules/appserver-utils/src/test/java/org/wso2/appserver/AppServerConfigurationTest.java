@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 import org.wso2.appserver.configuration.listeners.ServerConfigurationLoader;
 import org.wso2.appserver.configuration.server.AppServerConfiguration;
 import org.wso2.appserver.configuration.server.ClassLoaderEnvironments;
-import org.wso2.appserver.configuration.server.SSOConfiguration;
+import org.wso2.appserver.configuration.server.ServerSSOConfiguration;
 import org.wso2.appserver.configuration.server.SecurityConfiguration;
 import org.wso2.appserver.configuration.server.StatsPublisherConfiguration;
 import org.wso2.appserver.exceptions.ApplicationServerConfigurationException;
@@ -125,21 +125,21 @@ public class AppServerConfigurationTest {
         return classloadingEnvironments;
     }
 
-    private static SSOConfiguration prepareSSOConfigs() {
-        SSOConfiguration ssoConfiguration = new SSOConfiguration();
+    private static ServerSSOConfiguration prepareSSOConfigs() {
+        ServerSSOConfiguration ssoConfiguration = new ServerSSOConfiguration();
 
         ssoConfiguration.setIdpURL(TestConstants.IDP_URL);
         ssoConfiguration.setIdpEntityId(TestConstants.IDP_ENTITY_ID);
         ssoConfiguration.setSignatureValidatorImplClass(TestConstants.VALIDATOR_CLASS);
         ssoConfiguration.setIdpCertificateAlias(TestConstants.IDP_CERT_ALIAS);
 
-        SSOConfiguration.Property loginURL = new SSOConfiguration.Property();
+        ServerSSOConfiguration.Property loginURL = new ServerSSOConfiguration.Property();
         loginURL.setKey(TestConstants.LOGIN_URL_KEY);
         loginURL.setValue(TestConstants.LOGIN_URL_VALUE);
-        SSOConfiguration.Property relayState = new SSOConfiguration.Property();
+        ServerSSOConfiguration.Property relayState = new ServerSSOConfiguration.Property();
         relayState.setKey(TestConstants.RELAY_STATE_KEY);
         relayState.setValue(TestConstants.RELAY_STATE_VALUE);
-        List<SSOConfiguration.Property> properties = new ArrayList<>();
+        List<ServerSSOConfiguration.Property> properties = new ArrayList<>();
         properties.add(loginURL);
         properties.add(relayState);
         ssoConfiguration.setProperties(properties);
@@ -214,7 +214,7 @@ public class AppServerConfigurationTest {
         }
     }
 
-    private static boolean compareSSOConfigurations(SSOConfiguration actual, SSOConfiguration expected) {
+    private static boolean compareSSOConfigurations(ServerSSOConfiguration actual, ServerSSOConfiguration expected) {
         if ((actual != null) && (expected != null)) {
             boolean idpURL = actual.getIdpURL().trim().equals(expected.getIdpURL());
             boolean idpEntityID = actual.getIdpEntityId().trim().equals(expected.getIdpEntityId());
@@ -228,8 +228,8 @@ public class AppServerConfigurationTest {
         }
     }
 
-    private static boolean compareSSOProperties(List<SSOConfiguration.Property> actual,
-            List<SSOConfiguration.Property> expected) {
+    private static boolean compareSSOProperties(List<ServerSSOConfiguration.Property> actual,
+            List<ServerSSOConfiguration.Property> expected) {
         if ((actual != null) && (expected != null)) {
             return actual.stream().filter(property -> expected.stream().
                     filter(expProperty -> ((expProperty.getKey().equals(property.getKey())) && (expProperty.getValue().

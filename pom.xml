@@ -210,6 +210,11 @@
                 <version>${org.mockito.mockito-all.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml</artifactId>
+                <version>${org.opensaml.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
@@ -520,6 +525,7 @@
         <org.apache.httpcomponents.httpclient.version>4.3.1.wso2v2</org.apache.httpcomponents.httpclient.version>
         <org.jacoco.ant.version>0.7.5.201505241946</org.jacoco.ant.version>
         <org.mockito.mockito-all.version>1.10.19</org.mockito.mockito-all.version>
+        <org.opensaml.version>2.6.4</org.opensaml.version>
         <org.wso2.orbit.com.lmax.disruptor>3.3.2.wso2v2</org.wso2.orbit.com.lmax.disruptor>
         <runtime.cxf.version>3.1.5</runtime.cxf.version>
         <runtime.spring.version>4.2.5.RELEASE</runtime.spring.version>
