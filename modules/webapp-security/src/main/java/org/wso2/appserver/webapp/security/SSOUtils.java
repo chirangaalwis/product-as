@@ -76,7 +76,7 @@ public class SSOUtils {
     public static String createID() {
         byte[] bytes = new byte[20]; // 160 bit
         random.nextBytes(bytes);
-        char[] characterMapping = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p' };
+        char[] characterMapping = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'};
 
         char[] characters = new char[40];
         IntStream.range(0, bytes.length).forEach(index -> {
@@ -128,14 +128,15 @@ public class SSOUtils {
     /**
      * Returns a unique id value for the SAML 2.0 service provider application based on its context path.
      * <p>
-     * An {@code Optional String} id is returned based on the context path provided.
+     * An optional id is returned based on the context path provided.
      *
      * @param contextPath the context path of the service provider application
+     * @param hostAppBase the name of the Tomcat host's web application base
      * @return a unique id value for the SAML 2.0 service provider application based on its context path
      */
-    public static Optional<String> generateIssuerID(String contextPath) {
+    public static Optional<String> generateIssuerID(String contextPath, String hostAppBase) {
         if (contextPath != null) {
-            String issuerId = contextPath.replaceFirst("/webapps", "").replace("/", "_");
+            String issuerId = contextPath.replaceFirst("/" + hostAppBase, "").replace("/", "_");
             if (issuerId.startsWith("_")) {
                 issuerId = issuerId.substring(1);
             }

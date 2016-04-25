@@ -42,7 +42,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
     private static final Log log = LogFactory.getLog(SAMLSingleSignOn.class);
 
     private ServerSSOConfiguration serverConfiguration;
-    private ContextSSOConfiguration webappConfiguration;
+    private ContextSSOConfiguration contextConfiguration;
     private SSOAgentConfiguration agentConfiguration;
     private SSOAgentRequestResolver requestResolver;
 
@@ -80,7 +80,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
                 getContextConfiguration(request.getContext());
         if (contextConfiguration.isPresent()) {
             //  retrieves the configuration instance if exists
-            webappConfiguration = contextConfiguration.get().getSingleSignOnConfiguration();
+            this.contextConfiguration = contextConfiguration.get().getSingleSignOnConfiguration();
         } else {
             //  invokes next valve and move on to it, if no configuration instance exists
             getNext().invoke(request, response);
@@ -88,23 +88,24 @@ public class SAMLSingleSignOn extends SingleSignOn {
         }
 
         //  checks if single-sign-on feature is enabled
-        if (!webappConfiguration.isSSOEnabled()) {
+        if (!this.contextConfiguration.isSSOEnabled()) {
             if (log.isDebugEnabled()) {
-                log.debug("SAML 2.0 single-sign-on not enabled in webapp " + request.getContext().getName());
+                log.debug("SAML 2.0 single-sign-on not enabled in web app " + request.getContext().getName() + " " +
+                        "skipping single-sign-on...");
             }
             //  moves onto the next valve, if single-sign-on is not enabled
             getNext().invoke(request, response);
             return;
         }
 
-        setDefaultConfigurations(webappConfiguration);
+        setDefaultConfigurations(this.contextConfiguration);
         agentConfiguration = (SSOAgentConfiguration) (request.getSessionInternal().getNote(Constants.SSO_AGENT_CONFIG));
         if (agentConfiguration == null) {
             try {
-                agentConfiguration = createSSOAgentConfiguration(request.getContextPath());
+                agentConfiguration = createAgent(request);
                 request.getSessionInternal().setNote(Constants.SSO_AGENT_CONFIG, agentConfiguration);
             } catch (SSOException e) {
-                log.info("Error when initializing the SAML 2.0 single-sign-on agent configurations", e);
+                log.warn("Error when initializing the SAML 2.0 single-sign-on agent", e);
                 return;
             }
         }
@@ -147,22 +148,29 @@ public class SAMLSingleSignOn extends SingleSignOn {
     }
 
     /**
-     * Creates an {@code SSOAgentConfiguration} instance based on the configurations specified.
+     * Creates a single-sign-on (SSO) agent based on the configurations specified.
      *
-     * @param contextPath the context path of the processing {@link Request}
-     * @return the created {@link SSOAgentConfiguration}
-     * @throws SSOException if an error occurs when creating and validating the {@link SSOAgentConfiguration} instance
+     * @param request the {@link Request} instance used to construct the agent
+     * @return the created single-sign-on (SSO) agent instance
+     * @throws SSOException if an error occurs during the validation of the constructed agent
      */
-    private SSOAgentConfiguration createSSOAgentConfiguration(String contextPath) throws SSOException {
+    private SSOAgentConfiguration createAgent(Request request) throws SSOException {
         SSOAgentConfiguration ssoAgentConfiguration = new SSOAgentConfiguration();
-        ssoAgentConfiguration.initialize(serverConfiguration, webappConfiguration);
+        ssoAgentConfiguration.initialize(serverConfiguration, contextConfiguration);
 
         //TODO: SSOX509Credentials
 
-        ssoAgentConfiguration.getSAML2().setSPEntityId(Optional.ofNullable(ssoAgentConfiguration.getSAML2().
-                getSPEntityId()).orElse(SSOUtils.generateIssuerID(contextPath).get()));
-        ssoAgentConfiguration.getSAML2().setACSURL(Optional.ofNullable(ssoAgentConfiguration.getSAML2().getACSURL()).
-                orElse(SSOUtils.generateConsumerURL(contextPath, webappConfiguration).get()));
+        //  retrieves the request context path and the host's web application base
+        String contextPath = request.getContextPath();
+        String appBase = request.getHost().getAppBase();
+        //  generates the service provider entity ID
+        String issuerID = SSOUtils.generateIssuerID(contextPath, appBase).orElse("");
+        //  generates the SAML Assertion Consumer URL
+        String consumerURL = SSOUtils.generateConsumerURL(contextPath, contextConfiguration).orElse("");
+        ssoAgentConfiguration.getSAML2().
+                setSPEntityId(Optional.ofNullable(ssoAgentConfiguration.getSAML2().getSPEntityId()).orElse(issuerID));
+        ssoAgentConfiguration.getSAML2().
+                setACSURL(Optional.ofNullable(ssoAgentConfiguration.getSAML2().getACSURL()).orElse(consumerURL));
 
         ssoAgentConfiguration.validate();
         return ssoAgentConfiguration;

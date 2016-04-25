@@ -76,6 +76,8 @@ public class SSOAgentConfiguration {
             queryParameters = SSOUtils.getSplitQueryParameters(configuration.getQueryParams());
 
             saml2.httpBinding = Optional.ofNullable(configuration.getHttpBinding()).orElse(Constants.BINDING_DEFAULT);
+            saml2.spEntityId = configuration.getIssuerId();
+            saml2.acsURL = configuration.getConsumerURL();
             saml2.attributeConsumingServiceIndex = configuration.getAttributeConsumingServiceIndex();
             saml2.isForceAuthenticationEnabled = Optional.ofNullable(configuration.isForceAuthnEnabled()).orElse(false);
             saml2.isPassiveAuthenticationEnabled = Optional.ofNullable(configuration.isPassiveAuthnEnabled()).
