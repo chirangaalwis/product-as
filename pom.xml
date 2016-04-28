@@ -158,6 +158,16 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-juli</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-servlet-api</artifactId>
+                <version>${tomcat.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
                 <version>${commons.httpclient.version}</version>
@@ -199,6 +209,11 @@
                 <version>${jsr.api.version}</version>
             </dependency>
             <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${joda.time.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.jacoco</groupId>
                 <artifactId>org.jacoco.agent</artifactId>
                 <classifier>runtime</classifier>
@@ -208,6 +223,16 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
                 <version>${org.mockito.mockito-all.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>opensaml</artifactId>
+                <version>${org.opensaml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.opensaml</groupId>
+                <artifactId>xmltooling</artifactId>
+                <version>${org.opensaml.xmltooling.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -374,8 +399,13 @@
                 <artifactId>appserver-webapp-loader</artifactId>
                 <version>${appserver.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.wso2.appserver</groupId>
+                <artifactId>appserver-webapp-security</artifactId>
+                <version>${appserver.version}</version>
+            </dependency>
 
-            <!-- WSO2 Application Server Tests -->
+            <!-- WSO2 Application Server Test dependencies -->
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
@@ -437,7 +467,7 @@
                 <version>${carbon.analyticscommon.version}</version>
             </dependency>
 
-            <!-- dependencies related to http statistics publishing integration test -->
+            <!-- dependencies related to http statistics publishing integration tests -->
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
                 <artifactId>org.wso2.carbon.databridge.commons</artifactId>
@@ -467,16 +497,6 @@
                 <artifactId>org.wso2.carbon.databridge.receiver.thrift</artifactId>
                 <version>${databridge.component.version}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-juli</artifactId>
-                <version>${tomcat.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.tomcat</groupId>
-                <artifactId>tomcat-servlet-api</artifactId>
-                <version>${tomcat.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -515,11 +535,14 @@
         <googlecode.disruptor.version>2.10.4</googlecode.disruptor.version>
         <googlecode.json-simple.version>1.1.1</googlecode.json-simple.version>
         <jacoco.version>0.7.6.201602180812</jacoco.version>
+        <joda.time.version>2.9.3</joda.time.version>
         <junit.version>4.12</junit.version>
         <jsr.api.version>1.1.1</jsr.api.version>
         <org.apache.httpcomponents.httpclient.version>4.3.1.wso2v2</org.apache.httpcomponents.httpclient.version>
         <org.jacoco.ant.version>0.7.5.201505241946</org.jacoco.ant.version>
         <org.mockito.mockito-all.version>1.10.19</org.mockito.mockito-all.version>
+        <org.opensaml.version>2.6.4</org.opensaml.version>
+        <org.opensaml.xmltooling.version>1.4.4</org.opensaml.xmltooling.version>
         <org.wso2.orbit.com.lmax.disruptor>3.3.2.wso2v2</org.wso2.orbit.com.lmax.disruptor>
         <runtime.cxf.version>3.1.5</runtime.cxf.version>
         <runtime.spring.version>4.2.5.RELEASE</runtime.spring.version>
