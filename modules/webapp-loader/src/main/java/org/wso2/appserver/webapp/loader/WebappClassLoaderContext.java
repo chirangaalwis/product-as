@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
@@ -23,10 +24,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
-import org.wso2.appserver.configuration.context.ClassLoaderConfiguration;
+import org.wso2.appserver.configuration.context.WebAppClassLoading;
 import org.wso2.appserver.configuration.listeners.ContextConfigurationLoader;
 import org.wso2.appserver.configuration.listeners.ServerConfigurationLoader;
-import org.wso2.appserver.configuration.server.ClassLoaderEnvironments;
+import org.wso2.appserver.configuration.server.AppServerClassLoading;
 import org.wso2.appserver.exceptions.ApplicationServerRuntimeException;
 
 import java.io.File;
@@ -49,7 +50,7 @@ public class WebappClassLoaderContext {
     private Map<String, List<String>> selectedEnvironments = new ConcurrentHashMap<>();
 
     static {
-        List<ClassLoaderEnvironments.Environment> environments = ServerConfigurationLoader.getServerConfiguration().
+        List<AppServerClassLoading.Environment> environments = ServerConfigurationLoader.getServerConfiguration().
                 getClassLoaderEnvironments().getEnvironments().getEnvironments();
 
         //  populates the classpath defines in each environment
@@ -82,7 +83,7 @@ public class WebappClassLoaderContext {
         ContextConfigurationLoader.getContextConfiguration(context)
                 .ifPresent(configuration -> {
 
-                    ClassLoaderConfiguration classLoaderConfiguration = configuration.getClassLoaderConfiguration();
+                    WebAppClassLoading classLoaderConfiguration = configuration.getClassLoaderConfiguration();
 
                     if (classLoaderConfiguration != null && classLoaderConfiguration.getEnvironments() != null) {
                         List<String> environmentNames = Arrays
@@ -98,7 +99,7 @@ public class WebappClassLoaderContext {
                                                 .getPath();
                                         log.warn(message);
                                     }
-                        });
+                                });
                     }
                 });
     }

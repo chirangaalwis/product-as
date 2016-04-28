@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlValue;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement
-public class SSOConfiguration {
+public class WebAppSingleSignOn {
     @XmlElement(name = "skip-uris")
     private SkipURIs skipURIs;
     @XmlElement(name = "handle-consumer-url-after-slo")
@@ -285,7 +285,7 @@ public class SSOConfiguration {
      *
      * @param configurations the local, context level group of SSO configurations to be merged with
      */
-    void merge(SSOConfiguration configurations) {
+    void merge(WebAppSingleSignOn configurations) {
         Optional.ofNullable(configurations)
                 .ifPresent(configs -> {
                     skipURIs = Optional.ofNullable(configs.skipURIs).orElse(skipURIs);
@@ -323,7 +323,7 @@ public class SSOConfiguration {
                     enablePassiveAuthn = Optional.ofNullable(configs.enablePassiveAuthn)
                             .orElse(enablePassiveAuthn);
 
-                    List<SSOConfiguration.Property> properties = prioritizeProperties(this.getProperties(),
+                    List<WebAppSingleSignOn.Property> properties = prioritizeProperties(this.getProperties(),
                             configs.getProperties());
 
                     if (properties.isEmpty()) {
@@ -335,15 +335,15 @@ public class SSOConfiguration {
     }
 
     /**
-     * Prioritizes the additional webapp descriptor properties.
+     * Prioritizes the additional web app descriptor properties.
      *
      * @param global the globally defined set of additional SSO properties
      * @param local  the set of additional SSO properties defined at context level
      * @return the final, effective set of webapp descriptor additional SSO properties
      */
-    private static List<SSOConfiguration.Property> prioritizeProperties(List<SSOConfiguration.Property> global,
-            List<SSOConfiguration.Property> local) {
-        List<SSOConfiguration.Property> effective = new ArrayList<>();
+    private static List<WebAppSingleSignOn.Property> prioritizeProperties(List<WebAppSingleSignOn.Property> global,
+            List<WebAppSingleSignOn.Property> local) {
+        List<WebAppSingleSignOn.Property> effective = new ArrayList<>();
         if ((global != null) && (local != null)) {
             local
                     .stream()

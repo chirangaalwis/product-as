@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement
-public class ClassLoaderConfiguration {
+public class WebAppClassLoading {
     @XmlElement(name = "environments")
     private String environments;
 
@@ -47,7 +47,7 @@ public class ClassLoaderConfiguration {
      *
      * @param configuration the local, context level group of classloading configuration to be merged with
      */
-    void merge(ClassLoaderConfiguration configuration) {
+    void merge(WebAppClassLoading configuration) {
         Optional.ofNullable(configuration)
                 .ifPresent(mergeable ->
                         environments = Optional.ofNullable(mergeable.environments).orElse(environments));

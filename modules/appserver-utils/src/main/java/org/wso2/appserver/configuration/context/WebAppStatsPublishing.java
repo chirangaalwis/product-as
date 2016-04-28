@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement
-public class StatsPublisherConfiguration {
+public class WebAppStatsPublishing {
     @XmlElement(name = "enable-stats-publisher")
     private Boolean enableStatsPublisher;
 
@@ -48,7 +48,7 @@ public class StatsPublisherConfiguration {
      *
      * @param configuration the local, context level group of stats-publishing configuration to be merged with
      */
-    void merge(org.wso2.appserver.configuration.context.StatsPublisherConfiguration configuration) {
+    void merge(org.wso2.appserver.configuration.context.WebAppStatsPublishing configuration) {
         Optional.ofNullable(configuration)
                 .ifPresent(mergeable ->
                         enableStatsPublisher = Optional.ofNullable(mergeable.enableStatsPublisher)
