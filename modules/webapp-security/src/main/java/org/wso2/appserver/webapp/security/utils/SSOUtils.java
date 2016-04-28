@@ -57,6 +57,14 @@ public class SSOUtils {
     private static final SecureRandom random = new SecureRandom();
     private static boolean isBootStrapped;
 
+    /*static {
+        try {
+            SSOUtils.doBootstrap();
+        } catch (SSOException e) {
+            throw new RuntimeException("An error occurred when bootstrapping the OpenSAML library", e);
+        }
+    }*/
+
     /**
      * Prevents instantiating the SSOUtils utility class.
      */
