@@ -15,12 +15,11 @@
  */
 package org.wso2.appserver.webapp.security.agent;
 
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
 import org.wso2.appserver.configuration.context.WebAppSingleSignOn;
 import org.wso2.appserver.configuration.server.AppServerSingleSignOn;
 import org.wso2.appserver.webapp.security.Constants;
-import org.wso2.appserver.webapp.security.utils.SSOException;
+import org.wso2.appserver.webapp.security.saml.signature.SSOX509Credential;
+import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 import org.wso2.appserver.webapp.security.utils.SSOUtils;
 
 import java.util.HashMap;
@@ -35,8 +34,6 @@ import java.util.Set;
  * @since 6.0.0
  */
 public class SSOAgentConfiguration {
-    private static final Log log = LogFactory.getLog(SSOAgentConfiguration.class);
-
     private Boolean isSSOEnabled;
     private String requestURLPostfix;
     private Set<String> skipURIs;
@@ -86,14 +83,34 @@ public class SSOAgentConfiguration {
             saml2.httpBinding = Optional.ofNullable(configuration.getHttpBinding()).orElse(Constants.BINDING_DEFAULT);
             saml2.attributeConsumingServiceIndex = configuration.getAttributeConsumingServiceIndex();
             queryParameters = SSOUtils.getSplitQueryParameters(configuration.getQueryParams());
+
+            saml2.isAssertionSigned = Optional.ofNullable(configuration.isAssertionSigningEnabled())
+                    .orElse(false);
+            saml2.isAssertionEncrypted = Optional.ofNullable(configuration.isAssertionEncryptionEnabled())
+                    .orElse(false);
+            saml2.isRequestSigned = Optional.ofNullable(configuration.isRequestSigningEnabled())
+                    .orElse(false);
+            saml2.isResponseSigned = Optional.ofNullable(configuration.isResponseSigningEnabled())
+                    .orElse(false);
+
+            saml2.isSLOEnabled = Optional.ofNullable(configuration.isSLOEnabled())
+                    .orElse(false);
+            saml2.sloURLPostfix = Optional.ofNullable(configuration.getSLOURLPostfix())
+                    .orElse(Constants.SLO_URL_POSTFIX_DEFAULT);
         });
 
         Optional.ofNullable(server).ifPresent(configuration -> {
             saml2.idPURL = Optional.ofNullable(configuration.getIdpURL()).orElse(Constants.IDP_URL_DEFAULT);
-
-            //  TODO: not used
             saml2.idPEntityId = Optional.ofNullable(configuration.getIdpEntityId()).
                     orElse(Constants.IDP_ENTITY_ID_DEFAULT);
+            if (saml2.isResponseSigned()) {
+                saml2.signatureValidatorImplClass = configuration.getSignatureValidatorImplClass();
+                if (saml2.signatureValidatorImplClass == null) {
+                    //  TODO: logging
+//                    logger.log(Level.FINE, "Signature validator implementation class has not been configured");
+                }
+            }
+
         });
     }
 
@@ -120,10 +137,32 @@ public class SSOAgentConfiguration {
             }
 
             if (saml2.attributeConsumingServiceIndex == null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("SAML 2.0 attribute consuming index not configured, no attributes of the subject will " +
-                            "be requested");
-                }
+                //  TODO: container logging
+                /*if (log.isDebugEnabled()) {
+                    log.debug("SAML 2.0 attribute consuming index not configured, no attributes of the subject will "
+                            + "be requested");
+                }*/
+            }
+
+            if (saml2.isSLOEnabled && saml2.sloURLPostfix == null) {
+                throw new SSOException("Single Logout enabled, but SLO URL not configured");
+            }
+
+            if ((saml2.isAssertionSigned || saml2.isAssertionEncrypted ||
+                    saml2.isResponseSigned || saml2.isRequestSigned) && (saml2.ssoX509Credential == null)) {
+                //  TODO: container logging
+                /*logger.log(Level.FINE,
+                        "\'SSOX509Credential\' not configured, defaulting to " + SSOX509Credential.class.getName());*/
+            }
+
+            if ((saml2.isAssertionSigned || saml2.isResponseSigned) && (saml2.ssoX509Credential != null
+                    && saml2.ssoX509Credential.getEntityCertificate() == null)) {
+                throw new SSOException("Public certificate of IdP not configured");
+            }
+
+            if ((saml2.isRequestSigned || saml2.isAssertionEncrypted) && (saml2.ssoX509Credential != null
+                    && saml2.ssoX509Credential.getPrivateKey() == null)) {
+                throw new SSOException("Private key of SP not configured");
             }
         }
     }
@@ -141,37 +180,25 @@ public class SSOAgentConfiguration {
         private Boolean isPassiveAuthenticationEnabled;
         private Boolean isForceAuthenticationEnabled;
         private String relayState;
+        private SSOX509Credential ssoX509Credential;
+        private Boolean isAssertionSigned;
+        private Boolean isAssertionEncrypted;
+        private Boolean isResponseSigned;
+        private Boolean isRequestSigned;
+        private String signatureValidatorImplClass;
+        private Boolean isSLOEnabled;
+        private String sloURLPostfix;
 
         public String getHttpBinding() {
             return httpBinding;
         }
 
-        public String getRelayState() {
-            return relayState;
+        public String getSPEntityId() {
+            return spEntityId;
         }
 
-        public void setRelayState(String relayState) {
-            this.relayState = relayState;
-        }
-
-        public Boolean isForceAuthenticationEnabled() {
-            return isForceAuthenticationEnabled;
-        }
-
-        public Boolean isPassiveAuthenticationEnabled() {
-            return isPassiveAuthenticationEnabled;
-        }
-
-        public void enablePassiveAuthenticationEnabled(Boolean isPassiveAuthenticationEnabled) {
-            this.isPassiveAuthenticationEnabled = isPassiveAuthenticationEnabled;
-        }
-
-        public String getAttributeConsumingServiceIndex() {
-            return attributeConsumingServiceIndex;
-        }
-
-        public String getIdPURL() {
-            return idPURL;
+        public void setSPEntityId(String spEntityId) {
+            this.spEntityId = spEntityId;
         }
 
         public String getACSURL() {
@@ -182,12 +209,68 @@ public class SSOAgentConfiguration {
             this.acsURL = acsURL;
         }
 
-        public String getSPEntityId() {
-            return spEntityId;
+        public String getIdPEntityId() {
+            return idPEntityId;
         }
 
-        public void setSPEntityId(String spEntityId) {
-            this.spEntityId = spEntityId;
+        public String getIdPURL() {
+            return idPURL;
+        }
+
+        public String getAttributeConsumingServiceIndex() {
+            return attributeConsumingServiceIndex;
+        }
+
+        public Boolean isPassiveAuthenticationEnabled() {
+            return isPassiveAuthenticationEnabled;
+        }
+
+        public void enablePassiveAuthentication(Boolean isPassiveAuthenticationEnabled) {
+            this.isPassiveAuthenticationEnabled = isPassiveAuthenticationEnabled;
+        }
+
+        public Boolean isForceAuthenticationEnabled() {
+            return isForceAuthenticationEnabled;
+        }
+
+        public String getRelayState() {
+            return relayState;
+        }
+
+        public void setRelayState(String relayState) {
+            this.relayState = relayState;
+        }
+
+        public SSOX509Credential getSSOX509Credential() {
+            return ssoX509Credential;
+        }
+
+        public Boolean isAssertionSigned() {
+            return isAssertionSigned;
+        }
+
+        public Boolean isAssertionEncrypted() {
+            return isAssertionEncrypted;
+        }
+
+        public Boolean isResponseSigned() {
+            return isResponseSigned;
+        }
+
+        public Boolean isRequestSigned() {
+            return isRequestSigned;
+        }
+
+        public String getSignatureValidatorImplClass() {
+            return signatureValidatorImplClass;
+        }
+
+        public Boolean isSLOEnabled() {
+            return isSLOEnabled;
+        }
+
+        public String getSLOURLPostfix() {
+            return sloURLPostfix;
         }
     }
 }

@@ -15,23 +15,31 @@
  */
 package org.wso2.appserver.webapp.security.utils;
 
-import org.wso2.appserver.exceptions.ApplicationServerException;
-
 /**
- * This class defines a custom exception type which is used within the implementation of the single-sign-on (SSO).
- * <p>
- * This class extends the {@code javax.servlet.ServletException} class.
+ * This is a singleton, utility class in which an instance acts as a holder for {@code Object} type instances.
  *
  * @since 6.0.0
  */
-public class SSOException extends ApplicationServerException {
-    private static final long serialVersionUID = 7827497292430942234L;
+public class SSOAgentDataHolder {
+    private static final SSOAgentDataHolder instance = new SSOAgentDataHolder();
 
-    public SSOException(String message) {
-        super(message);
+    private Object object;
+
+    /**
+     * Prevents instantiating the SSOAgentDataHolder class.
+     */
+    private SSOAgentDataHolder() {
     }
 
-    public SSOException(String message, Throwable rootCause) {
-        super(message, rootCause);
+    public Object getObject() {
+        return object;
+    }
+
+    public void setObject(Object object) {
+        this.object = object;
+    }
+
+    public static SSOAgentDataHolder getInstance() {
+        return instance;
     }
 }

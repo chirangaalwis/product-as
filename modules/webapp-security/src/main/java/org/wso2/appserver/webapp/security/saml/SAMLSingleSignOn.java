@@ -28,7 +28,7 @@ import org.wso2.appserver.webapp.security.Constants;
 import org.wso2.appserver.webapp.security.agent.SSOAgentConfiguration;
 import org.wso2.appserver.webapp.security.agent.SSOAgentRequestResolver;
 import org.wso2.appserver.webapp.security.bean.RelayState;
-import org.wso2.appserver.webapp.security.utils.SSOException;
+import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 import org.wso2.appserver.webapp.security.utils.SSOUtils;
 
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
      */
     @Override
     public void invoke(Request request, Response response) throws IOException, ServletException {
-        containerLog.info("Invoking SAML 2.0 Single-Sign-On valve. Request URI : " + request.getRequestURI());
+        containerLog.info("Invoking SAML 2.0 single-sign-on valve. Request URI : " + request.getRequestURI());
 
         Optional<AppServerWebAppConfiguration> contextConfiguration = ContextConfigurationLoader.
                 getContextConfiguration(request.getContext());
@@ -108,7 +108,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
                 agentConfiguration = createAgent(request);
                 request.getSessionInternal().setNote(Constants.SSO_AGENT_CONFIG, agentConfiguration);
             } catch (SSOException e) {
-                containerLog.warn("Error when initializing the SAML 2.0 Single-Sign-On agent", e);
+                containerLog.warn("Error when initializing the SAML 2.0 single-sign-on agent", e);
                 return;
             }
         }
@@ -116,15 +116,31 @@ public class SAMLSingleSignOn extends SingleSignOn {
         SSOAgentRequestResolver requestResolver = new SSOAgentRequestResolver(request, agentConfiguration);
         //  if the request URL matches one of the URL(s) to skip, moves on to the next valve
         if (requestResolver.isURLToSkip()) {
-            containerLog.info("Request matched a skip URL. Skipping...");
+            containerLog.info("Request matched a URL to skip. Skipping...");
             getNext().invoke(request, response);
             return;
         }
 
         try {
-            if ((requestResolver.isSAMLAuthRequestURL()) || (request.getSession(false) == null) || (
+            if ((requestResolver.isSAMLAuthnRequestURL()) || (request.getSession(false) == null) || (
                     request.getSession(false).getAttribute(Constants.SESSION_BEAN) == null)) {
+                containerLog.info("Processing an SAML 2.0 Authentication Request...");
                 handleUnauthenticatedRequest(request, response, requestResolver);
+                return;
+            } else if (requestResolver.isSAML2SSOResponse()) {
+                containerLog.info("Processing a SAML 2.0 Response...");
+                handleResponse(request, response);
+                return;
+            } else if (requestResolver.isSAML2SLORequest()) {
+                //  Handles single logout request from the identity provider
+                containerLog.info("Processing Single Logout Request...");
+                SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
+                manager.performSingleLogout(request);
+            } else if (requestResolver.isSLOURL()) {
+                //  Handles single logout request initiated directly at the service provider
+                containerLog.info("Processing Single Logout URL...");
+                handleLogoutRequest(request, response, requestResolver);
+                return;
             }
         } catch (SSOException e) {
             containerLog.error("An error has occurred when processing the request", e);
@@ -148,6 +164,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
                             .orElse(Constants.APPLICATION_SERVER_URL_DEFAULT));
                     context.setConsumerURLPostfix(Optional.ofNullable(context.getConsumerURLPostfix())
                             .orElse(Constants.CONSUMER_URL_POSTFIX_DEFAULT));
+                    //  TODO: add default logout property value
                 });
     }
 
@@ -162,7 +179,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
         SSOAgentConfiguration ssoAgentConfiguration = new SSOAgentConfiguration();
         ssoAgentConfiguration.initialize(serverConfiguration, contextConfiguration);
 
-        //TODO: SSOX509Credentials
+        //  TODO: SSOX509Credentials
 
         //  retrieves the request context path and the host's web application base
         String contextPath = request.getContextPath();
@@ -205,11 +222,11 @@ public class SAMLSingleSignOn extends SingleSignOn {
 
         //  TODO: check if the isPassive option of wso2as-web.xml can be removed since this is overridden here + usage
         Optional.ofNullable(agentConfiguration)
-                .ifPresent(agent -> agent.getSAML2().enablePassiveAuthenticationEnabled(false));
+                .ifPresent(agent -> agent.getSAML2().enablePassiveAuthentication(false));
         if (requestResolver.isHttpPOSTBinding()) {
             containerLog.info("Handling the SAML 2.0 Authentication Request for HTTP-POST binding...");
             String htmlPayload = manager.handleAuthnRequestForPOSTBinding(request);
-            manager.sendCharacterData(response, htmlPayload);
+            SSOUtils.sendCharacterData(response, htmlPayload);
         } else {
             containerLog.info("Handling the SAML 2.0 Authentication Request for " +
                     agentConfiguration.getSAML2().getHttpBinding() + "...");
@@ -218,6 +235,131 @@ public class SAMLSingleSignOn extends SingleSignOn {
             } catch (IOException e) {
                 throw new SSOException("Error when handling SAML 2.0 HTTP-Redirect binding", e);
             }
+        }
+    }
+
+    /**
+     * Handles single-sign-on (SSO) and single-logout (SLO) responses.
+     *
+     * @param request  the servlet request processed
+     * @param response the servlet response generated
+     * @throws SSOException if an error occurs when handling a response
+     */
+    private void handleResponse(Request request, Response response) throws SSOException {
+        SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
+        Optional<String> redirectPath = captureRedirectPathAfterSLO(request);
+        manager.processResponse(request);
+        //  TODO: handle redirect path when absent
+        redirectAfterProcessingResponse(request, response, redirectPath.get());
+    }
+
+    /**
+     * Returns the redirect path after single-logout (SLO), read from the {@code request}.
+     * <p>
+     * If the redirect path is read from session then it is removed. Priority order of reading the redirect
+     * path is from session, context and context-level configuration, respectively.
+     *
+     * @param request the servlet request processed
+     * @return redirect path relative to the current application path
+     */
+    private Optional<String> captureRedirectPathAfterSLO(Request request) {
+        //  reads the redirect path, this has to read before the session get invalidated as it first
+        //  tries to read the redirect path from the session attribute
+        String redirectPath = null;
+
+        if (request.getSession(false) != null) {
+            redirectPath = (String) request.getSession(false).getAttribute(Constants.REDIRECT_PATH_AFTER_SLO);
+            request.getSession(false).removeAttribute(Constants.REDIRECT_PATH_AFTER_SLO);
+        }
+        redirectPath = Optional.ofNullable(redirectPath)
+                .orElse(request.getContext().findParameter(Constants.REDIRECT_PATH_AFTER_SLO));
+
+        Optional<WebAppSingleSignOn.Property> property = SSOUtils.
+                getContextPropertyValue(contextConfiguration.getProperties(), Constants.REDIRECT_PATH_AFTER_SLO);
+        if (property.isPresent()) {
+            redirectPath = Optional.ofNullable(redirectPath)
+                    .orElse(property.get().getValue());
+        }
+
+        if ((redirectPath != null) && (!redirectPath.isEmpty())) {
+            redirectPath = request.getContext().getPath().concat(redirectPath);
+        } else {
+            redirectPath = request.getContext().getPath();
+        }
+
+        if (containerLog.isDebugEnabled()) {
+            Optional.ofNullable(redirectPath)
+                    .ifPresent(path -> containerLog.debug("Redirect path = " + path));
+        }
+
+        return Optional.ofNullable(redirectPath);
+    }
+
+    /**
+     * Handles redirection after processing a SAML 2.0 based Response.
+     *
+     * @param request      the servlet request processed
+     * @param response     the servlet response generated
+     * @param redirectPath the redirect path obtained before processing a logout response
+     * @throws SSOException if an error occurs when redirecting
+     */
+    private void redirectAfterProcessingResponse(Request request, Response response, String redirectPath)
+            throws SSOException {
+        //  redirect according to relay state attribute
+        try {
+            String relayStateId = agentConfiguration.getSAML2().getRelayState();
+            if ((relayStateId != null) && (request.getSession(false) != null)) {
+                RelayState relayState = (RelayState) request.getSession(false).getAttribute(relayStateId);
+                if (relayState != null) {
+                    request.getSession(false).removeAttribute(relayStateId);
+                    StringBuilder requestedURI = new StringBuilder(relayState.getRequestedURL());
+                    relayState.getRequestQueryString().
+                            ifPresent(queryString -> requestedURI.append("?").append(queryString));
+                    relayState.getRequestParameters().ifPresent(queryParameters -> request.getSession(false).
+                            setAttribute(Constants.REQUEST_PARAM_MAP, queryParameters));
+                    response.sendRedirect(requestedURI.toString());
+                } else {
+                    response.sendRedirect(contextConfiguration.getApplicationServerURL() + request.getContextPath());
+                }
+            } else if (request.getRequestURI().endsWith(contextConfiguration.getConsumerURLPostfix())
+                    && contextConfiguration.handleConsumerURLAfterSLO()) {
+                //  handles redirect from acs page after SLO response, this will be done if
+                //  SAMLSSOValveConstants.HANDLE_CONSUMER_URL_AFTER_SLO is defined
+                //  SAMLSSOValveConstants.REDIRECT_PATH_AFTER_SLO value is used determine the redirect path
+                response.sendRedirect(redirectPath);
+            }
+        } catch (IOException e) {
+            throw new SSOException("Error during redirecting after processing SAML 2.0 Response", e);
+        }
+    }
+
+    /**
+     * Handles a logout request from a session participant.
+     *
+     * @param request         the servlet request processed
+     * @param response        the servlet response generated
+     * @param requestResolver the {@link SSOAgentRequestResolver} instance
+     * @throws SSOException if an error occurs when handling a logout request
+     */
+    private void handleLogoutRequest(Request request, Response response, SSOAgentRequestResolver requestResolver)
+            throws SSOException {
+        SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
+        try {
+            if (requestResolver.isHttpPOSTBinding()) {
+                if (request.getSession(false).getAttribute(Constants.SESSION_BEAN) != null) {
+                    agentConfiguration.getSAML2().enablePassiveAuthentication(false);
+                    String htmlPayload = manager.handleLogoutRequestForPOSTBinding(request);
+                    SSOUtils.sendCharacterData(response, htmlPayload);
+                } else {
+                    containerLog.warn("Attempt to logout from a already logout session");
+                    response.sendRedirect(request.getContext().getPath());
+                }
+            } else {
+                agentConfiguration.getSAML2().enablePassiveAuthentication(false);
+                response.sendRedirect(manager.handleLogoutRequestForRedirectBinding(request));
+            }
+        } catch (IOException e) {
+            throw new SSOException("Error when handling logout request", e);
         }
     }
 }
