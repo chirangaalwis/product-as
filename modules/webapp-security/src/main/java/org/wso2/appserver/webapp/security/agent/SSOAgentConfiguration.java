@@ -15,6 +15,7 @@
  */
 package org.wso2.appserver.webapp.security.agent;
 
+import org.apache.catalina.connector.Request;
 import org.apache.juli.logging.Log;
 import org.wso2.appserver.configuration.context.WebAppSingleSignOn;
 import org.wso2.appserver.configuration.server.AppServerSingleSignOn;
@@ -44,14 +45,14 @@ public class SSOAgentConfiguration {
     private Map<String, String[]> queryParameters;
     private SAML2 saml2;
 
-    public SSOAgentConfiguration() {
+    public SSOAgentConfiguration(Request request) {
+        if (request != null) {
+            containerLog = request.getHost().getLogger();
+        }
+
         queryParameters = new HashMap<>();
         skipURIs = new HashSet<>();
         saml2 = new SAML2();
-    }
-
-    public void setContainerLog(Log containerLog) {
-        this.containerLog = containerLog;
     }
 
     public Boolean isSSOEnabled() {

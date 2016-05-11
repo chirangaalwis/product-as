@@ -185,10 +185,9 @@ public class SAMLSingleSignOn extends SingleSignOn {
      * @throws SSOException if an error occurs during the validation of the constructed agent
      */
     private SSOAgentConfiguration createAgent(Request request) throws SSOException {
-        SSOAgentConfiguration ssoAgentConfiguration = new SSOAgentConfiguration();
+        SSOAgentConfiguration ssoAgentConfiguration = new SSOAgentConfiguration(request);
         setDefaultConfigurations(request);
 
-        ssoAgentConfiguration.setContainerLog(containerLog);
         ssoAgentConfiguration.initialize(serverConfiguration, contextConfiguration);
 
         ssoAgentConfiguration.getSAML2().setSSOX509Credential(

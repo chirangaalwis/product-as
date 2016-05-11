@@ -23,11 +23,6 @@
     <name>WSO2 Application Server - Module - Http Statistics Monitoring</name>
     <url>http://wso2.com</url>
 
-    <build>
-        <plugins>
-        </plugins>
-    </build>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.tomcat</groupId>

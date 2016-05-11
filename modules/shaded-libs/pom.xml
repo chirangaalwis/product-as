@@ -26,7 +26,4 @@
         <module>slf4j</module>
         <module>libthrift</module>
     </modules>
-
-
-
 </project>

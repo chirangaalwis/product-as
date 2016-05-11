@@ -83,8 +83,23 @@ class SAMLSSOManager {
 
     SAMLSSOManager(SSOAgentConfiguration ssoAgentConfiguration) throws SSOException {
         this.ssoAgentConfiguration = ssoAgentConfiguration;
-        //  TODO: load signature validator class
+        loadCustomSignatureValidatorClass();
         SSOUtils.doBootstrap();
+    }
+
+    /**
+     * Loads a custom signature validator class specified in the SSO Agent configurations.
+     */
+    private void loadCustomSignatureValidatorClass() throws SSOException {
+        try {
+            if ((ssoAgentConfiguration != null) && (ssoAgentConfiguration.getSAML2() != null) &&
+                    (ssoAgentConfiguration.getSAML2().getSignatureValidatorImplClass() != null)) {
+                SSOAgentDataHolder.getInstance().setObject(Class.
+                        forName(ssoAgentConfiguration.getSAML2().getSignatureValidatorImplClass()).newInstance());
+            }
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            throw new SSOException("Error loading custom signature validator class", e);
+        }
     }
 
     /**

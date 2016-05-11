@@ -76,6 +76,12 @@
                 <include>commons-pool:commons-pool:jar</include>
                 <include>commons-io:commons-io:jar</include>
                 <include>com.lmax:disruptor:jar</include>
+                <include>com.google.code.gson:gson:jar</include>
+                <include>commons-httpclient:commons-httpclient:jar</include>
+                <include>joda-time:joda-time:jar</include>
+                <include>org.apache.santuario:xmlsec:jar</include>
+                <include>org.opensaml:opensaml:jar</include>
+                <include>org.opensaml:xmltooling:jar</include>
             </includes>
         </dependencySet>
 

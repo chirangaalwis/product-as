@@ -37,7 +37,6 @@ public class SSOX509Credential {
     private PublicKey publicKey;
     private PrivateKey privateKey;
     private X509Certificate entityCertificate;
-
     private String idpCertificateAlias;
 
     public SSOX509Credential(String idpCertificateAlias, AppServerSecurity securityConfiguration) throws SSOException {
