@@ -26,14 +26,12 @@ public class Constants {
     public static final String HTTP_POST_PARAM_SAML_RESPONSE = "SAMLResponse";
 
     //  SSO agent configuration property default values
-    //  TODO: try to get the constructed app server URL - by setting the host name and request getConnector port
-    public static final String APPLICATION_SERVER_URL_DEFAULT = "https://localhost:8443";
-    public static final String CONSUMER_URL_POSTFIX_DEFAULT = "/acs";
-    public static final String BINDING_DEFAULT = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST";
-    public static final String IDP_URL_DEFAULT = "https://localhost:9443/samlsso";
-    public static final String IDP_ENTITY_ID_DEFAULT = "localhost";
-    public static final String REQUEST_URL_POSTFIX_DEFAULT = "samlsso";
-    public static final String SLO_URL_POSTFIX_DEFAULT = "logout";
+    public static final String DEFAULT_CONSUMER_URL_POSTFIX = "/acs";
+    public static final String SAML2_HTTP_POST_BINDING = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST";
+    public static final String DEFAULT_IDP_URL = "https://localhost:9443/samlsso";
+    public static final String DEFAULT_IDP_ENTITY_ID = "localhost";
+    public static final String DEFAULT_REQUEST_URL_POSTFIX = "samlsso";
+    public static final String DEFAULT_SLO_URL_POSTFIX = "logout";
 
     //  HTTP servlet request session notes' property name and attribute name constants
     public static final String SSO_AGENT_CONFIG = "SSOAgentConfig";

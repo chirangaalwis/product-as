@@ -15,18 +15,20 @@
  */
 package org.wso2.appserver.webapp.security.agent;
 
+import org.apache.juli.logging.Log;
 import org.wso2.appserver.configuration.context.WebAppSingleSignOn;
 import org.wso2.appserver.configuration.server.AppServerSingleSignOn;
 import org.wso2.appserver.webapp.security.Constants;
 import org.wso2.appserver.webapp.security.saml.signature.SSOX509Credential;
-import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 import org.wso2.appserver.webapp.security.utils.SSOUtils;
+import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class defines the configuration aspects of the single-sign-on (SSO) agent.
@@ -34,6 +36,8 @@ import java.util.Set;
  * @since 6.0.0
  */
 public class SSOAgentConfiguration {
+    private Log containerLog;
+
     private Boolean isSSOEnabled;
     private String requestURLPostfix;
     private Set<String> skipURIs;
@@ -44,6 +48,10 @@ public class SSOAgentConfiguration {
         queryParameters = new HashMap<>();
         skipURIs = new HashSet<>();
         saml2 = new SAML2();
+    }
+
+    public void setContainerLog(Log containerLog) {
+        this.containerLog = containerLog;
     }
 
     public Boolean isSSOEnabled() {
@@ -66,21 +74,33 @@ public class SSOAgentConfiguration {
         return saml2;
     }
 
+    /**
+     * Initializes the single-sign-on (SSO) agent configurations based on the configurations defined.
+     *
+     * @param server  the server level SSO configurations
+     * @param context the web app level SSO configurations
+     */
     public void initialize(AppServerSingleSignOn server, WebAppSingleSignOn context) {
         Optional.ofNullable(context).ifPresent(configuration -> {
-            isSSOEnabled = Optional.ofNullable(context.isSSOEnabled()).orElse(false);
+            isSSOEnabled = Optional.ofNullable(context.isSSOEnabled())
+                    .orElse(false);
             //  add URIs to be skipped, if any
-            Optional.ofNullable(configuration.getSkipURIs()).
-                    ifPresent(uris -> uris.getSkipURIs().forEach(skipURIs::add));
-            requestURLPostfix = Optional.ofNullable(configuration.getRequestURLPostfix()).
-                    orElse(Constants.REQUEST_URL_POSTFIX_DEFAULT);
+            Optional.ofNullable(configuration.getSkipURIs())
+                    .ifPresent(uris ->
+                            skipURIs = uris.getSkipURIs()
+                                    .stream()
+                                    .collect(Collectors.toSet()));
+            requestURLPostfix = Optional.ofNullable(configuration.getRequestURLPostfix())
+                    .orElse(Constants.DEFAULT_REQUEST_URL_POSTFIX);
 
             saml2.spEntityId = configuration.getIssuerId();
             saml2.acsURL = configuration.getConsumerURL();
-            saml2.isForceAuthenticationEnabled = Optional.ofNullable(configuration.isForceAuthnEnabled()).orElse(false);
-            saml2.isPassiveAuthenticationEnabled = Optional.ofNullable(configuration.isPassiveAuthnEnabled()).
-                    orElse(false);
-            saml2.httpBinding = Optional.ofNullable(configuration.getHttpBinding()).orElse(Constants.BINDING_DEFAULT);
+            saml2.isForceAuthenticationEnabled = Optional.ofNullable(configuration.isForceAuthnEnabled())
+                    .orElse(false);
+            saml2.isPassiveAuthenticationEnabled = Optional.ofNullable(configuration.isPassiveAuthnEnabled())
+                    .orElse(false);
+            saml2.httpBinding = Optional.ofNullable(configuration.getHttpBinding())
+                    .orElse(Constants.SAML2_HTTP_POST_BINDING);
             saml2.attributeConsumingServiceIndex = configuration.getAttributeConsumingServiceIndex();
             queryParameters = SSOUtils.getSplitQueryParameters(configuration.getQueryParams());
 
@@ -96,24 +116,30 @@ public class SSOAgentConfiguration {
             saml2.isSLOEnabled = Optional.ofNullable(configuration.isSLOEnabled())
                     .orElse(false);
             saml2.sloURLPostfix = Optional.ofNullable(configuration.getSLOURLPostfix())
-                    .orElse(Constants.SLO_URL_POSTFIX_DEFAULT);
+                    .orElse(Constants.DEFAULT_SLO_URL_POSTFIX);
         });
 
         Optional.ofNullable(server).ifPresent(configuration -> {
-            saml2.idPURL = Optional.ofNullable(configuration.getIdpURL()).orElse(Constants.IDP_URL_DEFAULT);
-            saml2.idPEntityId = Optional.ofNullable(configuration.getIdpEntityId()).
-                    orElse(Constants.IDP_ENTITY_ID_DEFAULT);
+            saml2.idPURL = Optional.ofNullable(configuration.getIdpURL()).orElse(Constants.DEFAULT_IDP_URL);
+            saml2.idPEntityId = Optional.ofNullable(configuration.getIdpEntityId())
+                    .orElse(Constants.DEFAULT_IDP_ENTITY_ID);
             if (saml2.isResponseSigned()) {
                 saml2.signatureValidatorImplClass = configuration.getSignatureValidatorImplClass();
                 if (saml2.signatureValidatorImplClass == null) {
-                    //  TODO: logging
-//                    logger.log(Level.FINE, "Signature validator implementation class has not been configured");
+                    if (containerLog != null) {
+                        containerLog.warn("Signature validator implementation class has not been configured");
+                    }
                 }
             }
 
         });
     }
 
+    /**
+     * Validates the single-sign-on (SSO) agent configurations and their combinations.
+     *
+     * @throws SSOException if an invalid configuration or a combination of configurations are encountered
+     */
     public void validate() throws SSOException {
         if (isSSOEnabled) {
             if (requestURLPostfix == null) {
@@ -137,27 +163,27 @@ public class SSOAgentConfiguration {
             }
 
             if (saml2.attributeConsumingServiceIndex == null) {
-                //  TODO: container logging
-                /*if (log.isDebugEnabled()) {
-                    log.debug("SAML 2.0 attribute consuming index not configured, no attributes of the subject will "
-                            + "be requested");
-                }*/
+                if ((containerLog != null) && (containerLog.isDebugEnabled())) {
+                    containerLog.debug("SAML 2.0 attribute consuming index not configured, no attributes " +
+                            "of the subject will be requested");
+                }
             }
 
             if (saml2.isSLOEnabled && saml2.sloURLPostfix == null) {
-                throw new SSOException("Single Logout enabled, but SLO URL not configured");
+                throw new SSOException("Single Logout enabled, but single logout URL post-fix not configured");
             }
 
             if ((saml2.isAssertionSigned || saml2.isAssertionEncrypted ||
                     saml2.isResponseSigned || saml2.isRequestSigned) && (saml2.ssoX509Credential == null)) {
-                //  TODO: container logging
-                /*logger.log(Level.FINE,
-                        "\'SSOX509Credential\' not configured, defaulting to " + SSOX509Credential.class.getName());*/
+                if ((containerLog != null) && (containerLog.isDebugEnabled())) {
+                    containerLog.debug("\'SSOX509Credential\' not configured, defaulting to " +
+                            SSOX509Credential.class.getName());
+                }
             }
 
             if ((saml2.isAssertionSigned || saml2.isResponseSigned) && (saml2.ssoX509Credential != null
                     && saml2.ssoX509Credential.getEntityCertificate() == null)) {
-                throw new SSOException("Public certificate of IdP not configured");
+                throw new SSOException("Public certificate of identity provider not configured");
             }
 
             if ((saml2.isRequestSigned || saml2.isAssertionEncrypted) && (saml2.ssoX509Credential != null
@@ -243,6 +269,10 @@ public class SSOAgentConfiguration {
 
         public SSOX509Credential getSSOX509Credential() {
             return ssoX509Credential;
+        }
+
+        public void setSSOX509Credential(SSOX509Credential ssoX509Credential) {
+            this.ssoX509Credential = ssoX509Credential;
         }
 
         public Boolean isAssertionSigned() {

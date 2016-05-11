@@ -19,8 +19,8 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.Response;
-import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 import org.wso2.appserver.webapp.security.utils.SSOUtils;
+import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 
 import java.io.IOException;
 import java.io.Serializable;

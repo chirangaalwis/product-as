@@ -17,16 +17,21 @@ package org.wso2.appserver.webapp.security.utils;
 
 import org.apache.catalina.connector.Request;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.xml.security.Init;
+import org.apache.xml.security.c14n.Canonicalizer;
+import org.apache.xml.security.signature.XMLSignature;
 import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.AttributeStatement;
+import org.opensaml.saml2.core.AuthnRequest;
 import org.opensaml.saml2.core.EncryptedAssertion;
 import org.opensaml.saml2.core.RequestAbstractType;
 import org.opensaml.saml2.encryption.Decrypter;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObject;
+import org.opensaml.xml.XMLObjectBuilder;
 import org.opensaml.xml.encryption.DecryptionException;
 import org.opensaml.xml.encryption.EncryptedKey;
 import org.opensaml.xml.io.Marshaller;
@@ -39,6 +44,13 @@ import org.opensaml.xml.security.SecurityHelper;
 import org.opensaml.xml.security.credential.Credential;
 import org.opensaml.xml.security.keyinfo.KeyInfoCredentialResolver;
 import org.opensaml.xml.security.keyinfo.StaticKeyInfoCredentialResolver;
+import org.opensaml.xml.security.x509.X509Credential;
+import org.opensaml.xml.signature.KeyInfo;
+import org.opensaml.xml.signature.Signature;
+import org.opensaml.xml.signature.SignatureException;
+import org.opensaml.xml.signature.Signer;
+import org.opensaml.xml.signature.X509Certificate;
+import org.opensaml.xml.signature.X509Data;
 import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Document;
@@ -70,10 +82,12 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,6 +100,7 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -137,6 +152,23 @@ public class SSOUtils {
      */
 
     /**
+     * Returns an application server URL constructed using the specified request.
+     *
+     * @param request the servlet request processed
+     * @return the application server URL constructed
+     */
+    public static Optional<String> constructApplicationServerURL(Request request) {
+        if (request == null) {
+            return Optional.empty();
+        }
+        StringBuilder appServerURL = new StringBuilder(request.getProtocol() + "://");
+        String requestHost = request.getHost().getName();
+        int requestPort = request.getConnector().getPort();
+
+        return Optional.of(appServerURL.append(requestHost).append(":").append(requestPort).toString());
+    }
+
+    /**
      * Returns the query parameters split out of the query parameter string.
      *
      * @param queryParameterString the query parameter {@link String}
@@ -159,10 +191,12 @@ public class SSOUtils {
                                 queryParameterMap.put(splitParameters[0], newList);
                             }
                         }
-                        queryParameterMap.entrySet().stream().forEach(entry -> {
-                            String[] values = entry.getValue().toArray(new String[entry.getValue().size()]);
-                            queryParameters.put(entry.getKey(), values);
-                        });
+                        queryParameterMap.entrySet()
+                                .stream()
+                                .forEach(entry -> {
+                                    String[] values = entry.getValue().toArray(new String[entry.getValue().size()]);
+                                    queryParameters.put(entry.getKey(), values);
+                                });
                     });
         }
 
@@ -323,6 +357,85 @@ public class SSOUtils {
     }
 
     /**
+     * Applies the XML Digital Signature to the SAML 2.0 based Authentication Request (AuthnRequest).
+     *
+     * @param authnRequest       the SAML 2.0 based Authentication Request (AuthnRequest)
+     * @param signatureAlgorithm the algorithm used to compute the signature
+     * @param credential         the signature signing credential
+     * @return the SAML 2.0 based Authentication Request (AuthnRequest) with XML Digital Signature set
+     * @throws SSOException if an error occurs while signing the SAML AuthnRequest message
+     */
+    public static AuthnRequest setSignature(AuthnRequest authnRequest, String signatureAlgorithm,
+            X509Credential credential) throws SSOException {
+        try {
+            Signature signature = setSignatureRaw(signatureAlgorithm, credential);
+            authnRequest.setSignature(signature);
+
+            List<Signature> signatureList = new ArrayList<>();
+            signatureList.add(signature);
+
+            //  marshall and sign
+            MarshallerFactory marshallerFactory = org.opensaml.xml.Configuration.getMarshallerFactory();
+            Marshaller marshaller = marshallerFactory.getMarshaller(authnRequest);
+            marshaller.marshall(authnRequest);
+
+            //  initializes and configures the library
+            Init.init();
+            //  signer is responsible for creating the digital signatures for the given XML Objects,
+            //  signs the XML Objects based on the given order of the Signature list
+            Signer.signObjects(signatureList);
+            return authnRequest;
+        } catch (MarshallingException | SignatureException e) {
+            throw new SSOException("Error while signing the SAML 2.0 AuthnRequest message", e);
+        }
+    }
+
+    /**
+     * Generates an XML Object representing an enveloped or detached XML Digital Signature.
+     *
+     * @param signatureAlgorithm the algorithm used to compute the signature
+     * @param credential         the signature signing credentials
+     * @return an XML Object representing an enveloped or detached XML Digital Signature
+     * @throws SSOException if an error occurs while getting the signature
+     */
+    private static Signature setSignatureRaw(String signatureAlgorithm, X509Credential credential) throws SSOException {
+        Signature signature = (Signature) buildXMLObject(Signature.DEFAULT_ELEMENT_NAME);
+        signature.setSigningCredential(credential);
+        signature.setSignatureAlgorithm(signatureAlgorithm);
+        signature.setCanonicalizationAlgorithm(Canonicalizer.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+
+        try {
+            KeyInfo keyInfo = (KeyInfo) buildXMLObject(KeyInfo.DEFAULT_ELEMENT_NAME);
+            X509Data data = (X509Data) buildXMLObject(X509Data.DEFAULT_ELEMENT_NAME);
+            X509Certificate cert = (X509Certificate) buildXMLObject(X509Certificate.DEFAULT_ELEMENT_NAME);
+            String value = org.apache.xml.security.utils.Base64.encode(credential.getEntityCertificate().getEncoded());
+            cert.setValue(value);
+            data.getX509Certificates().add(cert);
+            keyInfo.getX509Datas().add(data);
+            signature.setKeyInfo(keyInfo);
+            return signature;
+        } catch (CertificateEncodingException e) {
+            throw new SSOException("Error getting certificate", e);
+        }
+    }
+
+    /**
+     * Builds a SAML 2.0 based XML object using the fully qualified name.
+     *
+     * @param objectQualifiedName fully qualified name
+     * @return a SAML 2.0 based XML object
+     * @throws SSOException if an error occurs while retrieving the builder for the fully qualified name
+     */
+    private static XMLObject buildXMLObject(QName objectQualifiedName) throws SSOException {
+        XMLObjectBuilder builder = org.opensaml.xml.Configuration.getBuilderFactory().getBuilder(objectQualifiedName);
+        if (builder == null) {
+            throw new SSOException("Unable to retrieve builder for object QName " + objectQualifiedName);
+        }
+        return builder.buildObject(objectQualifiedName.getNamespaceURI(), objectQualifiedName.getLocalPart(),
+                objectQualifiedName.getPrefix());
+    }
+
+    /**
      * Encodes the SAML 2.0 based request XML object into its corresponding Base64 notation, based on the type of
      * SAML 2.0 binding.
      *
@@ -365,8 +478,7 @@ public class SSOUtils {
                 throw new SSOException("Error occurred while encoding SAML 2.0 request", e);
             }
         } else {
-            //  HTTP binding urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST is used, if the binding type encountered
-            //  is HTTP-POST binding or if an unsupported binding type is encountered
+            //  if the binding type encountered is HTTP-POST binding or an unsupported binding type
             return Base64.encodeBytes(writer.toString().getBytes(Charset.forName(Constants.UTF8_ENC)),
                     Base64.DONT_BREAK_LINES);
         }
@@ -443,11 +555,14 @@ public class SSOUtils {
                 encryptedKey = key.get();
             }
             Decrypter decrypter = new Decrypter(null, keyResolver, null);
-            SecretKey decrypterKey = (SecretKey) decrypter.decryptKey(encryptedKey, encryptedAssertion.getEncryptedData().
-                    getEncryptionMethod().getAlgorithm());
-            Credential shared = SecurityHelper.getSimpleCredential(decrypterKey);
-            decrypter = new Decrypter(new StaticKeyInfoCredentialResolver(shared), null, null);
-            decrypter.setRootInNewDocument(true);
+            SecretKey decrypterKey;
+            if (encryptedKey != null) {
+                decrypterKey = (SecretKey) decrypter.decryptKey(encryptedKey, encryptedAssertion.getEncryptedData().
+                        getEncryptionMethod().getAlgorithm());
+                Credential shared = SecurityHelper.getSimpleCredential(decrypterKey);
+                decrypter = new Decrypter(new StaticKeyInfoCredentialResolver(shared), null, null);
+                decrypter.setRootInNewDocument(true);
+            }
             return decrypter.decrypt(encryptedAssertion);
         } catch (DecryptionException e) {
             throw new SSOException("Decrypted assertion error", e);
@@ -478,6 +593,33 @@ public class SSOUtils {
                             }));
         }
         return results;
+    }
+
+    /**
+     * Applies the XML Digital Signature to the HTTP query string specified.
+     *
+     * @param httpQueryString the primary HTTP query string which is to be digitally signed
+     * @param credential      an entity credential associated with X.509 Public Key Infrastructure
+     * @throws SSOException if an error occurs while applying the SAML 2.0 Redirect binding signature
+     */
+    public static void addDeflateSignatureToHTTPQueryString(StringBuilder httpQueryString, X509Credential credential)
+            throws SSOException {
+        try {
+            httpQueryString.append("&SigAlg=").
+                    append(URLEncoder.encode(XMLSignature.ALGO_ID_SIGNATURE_RSA, Constants.UTF8_ENC).trim());
+
+            java.security.Signature signature = java.security.Signature.getInstance("SHA1withRSA");
+            signature.initSign(credential.getPrivateKey());
+            signature.update(httpQueryString.toString().getBytes(Charset.forName(Constants.UTF8_ENC)));
+            byte[] signatureByteArray = signature.sign();
+
+            String signatureBase64EncodedString = Base64.encodeBytes(signatureByteArray, Base64.DONT_BREAK_LINES);
+            httpQueryString.append("&Signature=").
+                    append(URLEncoder.encode(signatureBase64EncodedString, Constants.UTF8_ENC).trim());
+        } catch (NoSuchAlgorithmException | InvalidKeyException |
+                java.security.SignatureException | UnsupportedEncodingException e) {
+            throw new SSOException("Error applying SAML 2.0 Redirect Binding signature", e);
+        }
     }
 
     /**

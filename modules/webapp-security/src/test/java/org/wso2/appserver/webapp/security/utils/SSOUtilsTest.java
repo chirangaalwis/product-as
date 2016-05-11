@@ -81,10 +81,10 @@ public class SSOUtilsTest {
     public void testGeneratingConsumerURL() {
         WebAppSingleSignOn ssoConfiguration = new WebAppSingleSignOn();
         ssoConfiguration.setApplicationServerURL(TestConstants.APPLICATION_SERVER_URL_DEFAULT);
-        ssoConfiguration.setConsumerURLPostfix(Constants.CONSUMER_URL_POSTFIX_DEFAULT);
+        ssoConfiguration.setConsumerURLPostfix(Constants.DEFAULT_CONSUMER_URL_POSTFIX);
 
         String expected = TestConstants.APPLICATION_SERVER_URL_DEFAULT + TestConstants.CONTEXT_PATH +
-                Constants.CONSUMER_URL_POSTFIX_DEFAULT;
+                Constants.DEFAULT_CONSUMER_URL_POSTFIX;
         Optional<String> actual = SSOUtils.generateConsumerURL(TestConstants.CONTEXT_PATH, ssoConfiguration);
 
         Assert.assertTrue((actual.isPresent()) && (actual.get().equals(expected)));
@@ -94,7 +94,7 @@ public class SSOUtilsTest {
     public void testGeneratingConsumerURLFromInvalidContextPath() {
         WebAppSingleSignOn ssoConfiguration = new WebAppSingleSignOn();
         ssoConfiguration.setApplicationServerURL(TestConstants.APPLICATION_SERVER_URL_DEFAULT);
-        ssoConfiguration.setConsumerURLPostfix(Constants.CONSUMER_URL_POSTFIX_DEFAULT);
+        ssoConfiguration.setConsumerURLPostfix(Constants.DEFAULT_CONSUMER_URL_POSTFIX);
 
         Optional<String> actual = SSOUtils.generateConsumerURL(null, ssoConfiguration);
 

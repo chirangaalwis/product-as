@@ -28,7 +28,7 @@ import java.io.IOException;
  *
  * @since 6.0.0
  */
-public class XMLEntityResolver implements EntityResolver {
+class XMLEntityResolver implements EntityResolver {
     /**
      * Allows the application to resolve external entities.
      *

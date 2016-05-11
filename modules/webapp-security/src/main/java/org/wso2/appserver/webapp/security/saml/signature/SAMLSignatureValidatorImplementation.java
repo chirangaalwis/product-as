@@ -36,8 +36,8 @@ public class SAMLSignatureValidatorImplementation implements SignatureValidator 
                         + "in SAML2 Response element");
             } else {
                 try {
-                    org.opensaml.xml.signature.SignatureValidator validator = new org.opensaml.xml.signature.SignatureValidator(
-                            new X509CredentialImplementation(
+                    org.opensaml.xml.signature.SignatureValidator validator =
+                            new org.opensaml.xml.signature.SignatureValidator(new X509CredentialImplementation(
                                     ssoAgentConfiguration.getSAML2().getSSOX509Credential().getEntityCertificate()));
                     validator.validate(response.getSignature());
                 } catch (ValidationException e) {
@@ -51,8 +51,8 @@ public class SAMLSignatureValidatorImplementation implements SignatureValidator 
                         + "SAML2 Assertion element");
             } else {
                 try {
-                    org.opensaml.xml.signature.SignatureValidator validator = new org.opensaml.xml.signature.SignatureValidator(
-                            new X509CredentialImplementation(
+                    org.opensaml.xml.signature.SignatureValidator validator =
+                            new org.opensaml.xml.signature.SignatureValidator(new X509CredentialImplementation(
                                     ssoAgentConfiguration.getSAML2().getSSOX509Credential().getEntityCertificate()));
                     validator.validate(assertion.getSignature());
                 } catch (ValidationException e) {
