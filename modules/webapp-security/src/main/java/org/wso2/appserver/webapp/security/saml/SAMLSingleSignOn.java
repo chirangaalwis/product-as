@@ -47,6 +47,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
     private AppServerSingleSignOn serverConfiguration;
     private WebAppSingleSignOn contextConfiguration;
     private SSOAgentConfiguration agentConfiguration;
+    private SSOAgentRequestResolver requestResolver;
 
     /**
      * Retrieves the WSO2 Application Server level configurations.
@@ -122,7 +123,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
             }
         }
 
-        SSOAgentRequestResolver requestResolver = new SSOAgentRequestResolver(request, agentConfiguration);
+        requestResolver = new SSOAgentRequestResolver(request, agentConfiguration);
         //  if the request URL matches one of the URL(s) to skip, moves on to the next valve
         if (requestResolver.isURLToSkip()) {
             containerLog.info("Request matched a URL to skip. Skipping...");
@@ -134,7 +135,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
             if ((requestResolver.isSAMLAuthnRequestURL()) || (request.getSession(false) == null) || (
                     request.getSession(false).getAttribute(Constants.SESSION_BEAN) == null)) {
                 containerLog.info("Processing an SAML 2.0 Authentication Request...");
-                handleUnauthenticatedRequest(request, response, requestResolver);
+                handleUnauthenticatedRequest(request, response);
                 return;
             } else if (requestResolver.isSAML2SSOResponse()) {
                 containerLog.info("Processing a SAML 2.0 Response...");
@@ -148,7 +149,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
             } else if (requestResolver.isSLOURL()) {
                 //  Handles single logout request initiated directly at the service provider
                 containerLog.info("Processing Single Logout URL...");
-                handleLogoutRequest(request, response, requestResolver);
+                handleLogoutRequest(request, response);
                 return;
             }
         } catch (SSOException e) {
@@ -217,13 +218,11 @@ public class SAMLSingleSignOn extends SingleSignOn {
     /**
      * Handles the unauthenticated requests for all contexts.
      *
-     * @param request         the servlet request processed
-     * @param response        the servlet response generated
-     * @param requestResolver the {@link SSOAgentRequestResolver} instance
+     * @param request  the servlet request processed
+     * @param response the servlet response generated
      * @throws SSOException if an error occurs when handling an unauthenticated request
      */
-    private void handleUnauthenticatedRequest(Request request, Response response,
-            SSOAgentRequestResolver requestResolver) throws SSOException {
+    private void handleUnauthenticatedRequest(Request request, Response response) throws SSOException {
         SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
 
         //  handle the generation of the SAML 2.0 RelayState
@@ -351,13 +350,11 @@ public class SAMLSingleSignOn extends SingleSignOn {
     /**
      * Handles a logout request from a session participant.
      *
-     * @param request         the servlet request processed
-     * @param response        the servlet response generated
-     * @param requestResolver the {@link SSOAgentRequestResolver} instance
+     * @param request  the servlet request processed
+     * @param response the servlet response generated
      * @throws SSOException if an error occurs when handling a logout request
      */
-    private void handleLogoutRequest(Request request, Response response, SSOAgentRequestResolver requestResolver)
-            throws SSOException {
+    private void handleLogoutRequest(Request request, Response response) throws SSOException {
         SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
         try {
             if (requestResolver.isHttpPOSTBinding()) {
