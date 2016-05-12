@@ -57,6 +57,7 @@
             <outputDirectory>/${distribution.file.name}/lib</outputDirectory>
             <includes>
                 <include>org.wso2.appserver.shade.org.apache.thrift:libthrift-shaded:jar</include>
+                <include>org.wso2.appserver.shade.org.opensaml:opensaml-shaded:jar</include>
                 <include>org.wso2.appserver.shade.slf4j:slf4j-shaded:jar</include>
             </includes>
             <useProjectArtifact>false</useProjectArtifact>
@@ -78,10 +79,6 @@
                 <include>com.lmax:disruptor:jar</include>
                 <include>com.google.code.gson:gson:jar</include>
                 <include>commons-httpclient:commons-httpclient:jar</include>
-                <include>joda-time:joda-time:jar</include>
-                <include>org.apache.santuario:xmlsec:jar</include>
-                <include>org.opensaml:opensaml:jar</include>
-                <include>org.opensaml:xmltooling:jar</include>
             </includes>
         </dependencySet>
 

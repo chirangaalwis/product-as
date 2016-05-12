@@ -25,5 +25,6 @@
     <modules>
         <module>slf4j</module>
         <module>libthrift</module>
+        <module>opensaml</module>
     </modules>
 </project>
