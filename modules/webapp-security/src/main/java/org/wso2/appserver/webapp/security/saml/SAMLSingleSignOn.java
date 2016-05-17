@@ -132,24 +132,24 @@ public class SAMLSingleSignOn extends SingleSignOn {
         }
 
         try {
-            if ((requestResolver.isSAMLAuthnRequestURL()) || (request.getSession(false) == null) || (
-                    request.getSession(false).getAttribute(Constants.SESSION_BEAN) == null)) {
-                containerLog.info("Processing an SAML 2.0 Authentication Request...");
-                handleUnauthenticatedRequest(request, response);
-                return;
+            if (requestResolver.isSAML2SLORequest()) {
+                //  handles single logout request from the identity provider
+                containerLog.info("Processing Single Logout Request...");
+                SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
+                manager.performSingleLogout(request);
             } else if (requestResolver.isSAML2SSOResponse()) {
                 containerLog.info("Processing a SAML 2.0 Response...");
                 handleResponse(request, response);
                 return;
-            } else if (requestResolver.isSAML2SLORequest()) {
-                //  Handles single logout request from the identity provider
-                containerLog.info("Processing Single Logout Request...");
-                SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
-                manager.performSingleLogout(request);
             } else if (requestResolver.isSLOURL()) {
-                //  Handles single logout request initiated directly at the service provider
+                //  handles single logout request initiated directly at the service provider
                 containerLog.info("Processing Single Logout URL...");
                 handleLogoutRequest(request, response);
+                return;
+            } else if ((requestResolver.isSAMLAuthnRequestURL()) || (request.getSession(false) == null) || (
+                    request.getSession(false).getAttribute(Constants.SESSION_BEAN) == null)) {
+                containerLog.info("Processing an SAML 2.0 Authentication Request...");
+                handleUnauthenticatedRequest(request, response);
                 return;
             }
         } catch (SSOException e) {
@@ -239,7 +239,9 @@ public class SAMLSingleSignOn extends SingleSignOn {
                 .ifPresent(agent -> agent.getSAML2().enablePassiveAuthentication(false));
         if (requestResolver.isHttpPOSTBinding()) {
             containerLog.info("Handling the SAML 2.0 Authentication Request for HTTP-POST binding...");
+
             String htmlPayload = manager.handleAuthnRequestForPOSTBinding(request);
+
             SSOUtils.sendCharacterData(response, htmlPayload);
         } else {
             containerLog.info("Handling the SAML 2.0 Authentication Request for " +
@@ -261,10 +263,13 @@ public class SAMLSingleSignOn extends SingleSignOn {
      */
     private void handleResponse(Request request, Response response) throws SSOException {
         SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
+
         Optional<String> redirectPath = captureRedirectPathAfterSLO(request);
+
         manager.processResponse(request);
-        //  TODO: handle redirect path when absent
-        redirectAfterProcessingResponse(request, response, redirectPath.get());
+
+        redirectAfterProcessingResponse(request, response, redirectPath
+                .orElse(""));
     }
 
     /**
@@ -337,10 +342,13 @@ public class SAMLSingleSignOn extends SingleSignOn {
                 }
             } else if (request.getRequestURI().endsWith(contextConfiguration.getConsumerURLPostfix())
                     && contextConfiguration.handleConsumerURLAfterSLO()) {
-                //  handles redirect from acs page after SLO response, this will be done if
-                //  SAMLSSOValveConstants.HANDLE_CONSUMER_URL_AFTER_SLO is defined
-                //  SAMLSSOValveConstants.REDIRECT_PATH_AFTER_SLO value is used determine the redirect path
-                response.sendRedirect(redirectPath);
+                //  handles redirect from acs page after single-logout response
+                //  this will be done if the 'handle-consumer-url-after-slo' property is set to true for the web app
+                //  concerned, the user can set a custom path to redirect after single-logout by defining a custom
+                //  property named 'redirectPathAfterSLO' in the WSO2 Application Server web-app descriptor
+                if ((redirectPath == null) || (redirectPath.equals(""))) {
+                    response.sendRedirect(redirectPath);
+                }
             }
         } catch (IOException e) {
             throw new SSOException("Error during redirecting after processing SAML 2.0 Response", e);
