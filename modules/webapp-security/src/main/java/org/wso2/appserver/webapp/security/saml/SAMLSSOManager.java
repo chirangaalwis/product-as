@@ -15,7 +15,9 @@
  */
 package org.wso2.appserver.webapp.security.saml;
 
+import org.apache.catalina.connector.Request;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.juli.logging.Log;
 import org.apache.xml.security.signature.XMLSignature;
 import org.joda.time.DateTime;
 import org.opensaml.common.SAMLVersion;
@@ -105,11 +107,11 @@ class SAMLSSOManager {
     /**
      * Handles a SAML 2.0 Authentication Request (AuthnRequest) for SAML 2.0 HTTP POST binding.
      *
-     * @param request the HTTP servlet request with SAML message
+     * @param request the HTTP servlet request with SAML 2.0 message
      * @return the HTML payload to be transmitted
      * @throws SSOException if an error occurs when handling AuthnRequest
      */
-    String handleAuthnRequestForPOSTBinding(HttpServletRequest request) throws SSOException {
+    String handleAuthnRequestForPOSTBinding(Request request) throws SSOException {
         RequestAbstractType requestMessage = buildAuthnRequest(request);
         if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
             requestMessage = SSOUtils.setSignature((AuthnRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
@@ -154,7 +156,7 @@ class SAMLSSOManager {
      * @return the Identity Provider URL with the query string appended based on the SAML 2.0 Request and configurations
      * @throws SSOException if an error occurs when handling AuthnRequest
      */
-    String handleAuthnRequestForRedirectBinding(HttpServletRequest request) throws SSOException {
+    String handleAuthnRequestForRedirectBinding(Request request) throws SSOException {
         RequestAbstractType requestMessage = buildAuthnRequest(request);
         return prepareRedirectRequest(requestMessage);
     }
@@ -306,7 +308,7 @@ class SAMLSSOManager {
      * @param request the HTTP servlet request used to build up the Authentication Request
      * @return a SAML 2.0 Authentication Request (AuthnRequest) instance
      */
-    private AuthnRequest buildAuthnRequest(HttpServletRequest request) {
+    private AuthnRequest buildAuthnRequest(Request request) {
         //  the Issuer element identifies the entity that generated the request message
         Issuer issuer = new IssuerBuilder().buildObject();
         issuer.setValue(ssoAgentConfiguration.getSAML2().getSPEntityId());
@@ -415,7 +417,7 @@ class SAMLSSOManager {
      * @param request the servlet request processed
      * @throws SSOException if SAML 2.0 response is null
      */
-    void processResponse(HttpServletRequest request) throws SSOException {
+    void processResponse(Request request) throws SSOException {
         String saml2SSOResponse = request.getParameter(Constants.HTTP_POST_PARAM_SAML_RESPONSE);
 
         if (saml2SSOResponse != null) {
@@ -444,7 +446,7 @@ class SAMLSSOManager {
      * @param request the HTTP servlet request used to process the SAML 2.0 Response
      * @throws SSOException if the received SAML 2.0 Response is invalid
      */
-    private void processSingleSignInResponse(HttpServletRequest request) throws SSOException {
+    private void processSingleSignInResponse(Request request) throws SSOException {
         LoggedInSession session = new LoggedInSession();
         session.setSAML2SSO(new LoggedInSession.SAML2SSO());
 
@@ -482,8 +484,8 @@ class SAMLSSOManager {
 
         if (assertion == null) {
             if (isNoPassive(saml2Response)) {
-                //  TODO: isNoPassive?, logging
-//                containerLog.info("Cannot authenticate in passive mode");
+                //  TODO: isNoPassive?
+                request.getHost().getLogger().info("Cannot authenticate in passive mode");
                 return;
             }
             throw new SSOException("SAML 2.0 Assertion not found in the Response");
@@ -517,7 +519,7 @@ class SAMLSSOManager {
         //  validates the signature
         validateSignature(saml2Response, assertion);
 
-        //  marshalling SAML2 assertion after signature validation due to a weird issue in OpenSAML
+        //  marshalling SAML 2.0 assertion after signature validation due to an issue in OpenSAML
         session.getSAML2SSO().setAssertionString(SSOUtils.marshall(assertion));
 
         ((LoggedInSession) request.getSession().getAttribute(Constants.SESSION_BEAN)).
@@ -535,9 +537,8 @@ class SAMLSSOManager {
             if (sessionId == null) {
                 throw new SSOException("Single Logout is enabled but IdP Session ID not found in SAML Assertion");
             }
-            ((LoggedInSession) request.getSession().
-                    getAttribute(Constants.SESSION_BEAN)).getSAML2SSO()
-                    .setSessionIndex(sessionId);
+            ((LoggedInSession) request.getSession().getAttribute(Constants.SESSION_BEAN)).getSAML2SSO().
+                    setSessionIndex(sessionId);
             SSOAgentSessionManager.addAuthenticatedSession(request.getSession(false));
         }
 
@@ -550,7 +551,7 @@ class SAMLSSOManager {
      * @param request the HTTP servlet request
      * @throws SSOException if the SAML 2.0 Single Logout Request/Response is invalid
      */
-    void performSingleLogout(HttpServletRequest request) throws SSOException {
+    void performSingleLogout(Request request) throws SSOException {
         XMLObject saml2Object = null;
 
         if (request.getParameter(Constants.HTTP_POST_PARAM_SAML_REQUEST) != null) {
@@ -570,7 +571,7 @@ class SAMLSSOManager {
                             stream().forEach(HttpSession::invalidate));
         } else if (saml2Object instanceof LogoutResponse) {
             Optional.ofNullable(request.getSession(false)).ifPresent(session -> {
-                //  Not invalidating session explicitly since there may be other listeners
+                //  not invalidating session explicitly since there may be other listeners
                 //  still waiting to get triggered and at the end of the chain session needs to be
                 //  invalidated by the system.
                 Set<HttpSession> sessions = SSOAgentSessionManager.invalidateAllSessions(request.getSession(false));
@@ -578,8 +579,10 @@ class SAMLSSOManager {
                     try {
                         httpSession.invalidate();
                     } catch (IllegalStateException ignore) {
-                        //  TODO: logging
-//                        logger.log(Level.FINE, "Ignoring exception : ", ignore);
+                        Log containerLog = request.getHost().getLogger();
+                        if (containerLog.isDebugEnabled()) {
+                            containerLog.debug("Ignoring exception : ", ignore);
+                        }
                     }
                 });
             });
@@ -642,22 +645,22 @@ class SAMLSSOManager {
     /**
      * Validates the XML Digital Signature of specified SAML 2.0 based Response and Assertion.
      *
-     * @param response  the SAML based Response whose XML Digital Signature is to be validated
-     * @param assertion the SAML based Assertion whose XML Digital Signature is to be validated
+     * @param response  the SAML 2.0 based Response whose XML Digital Signature is to be validated
+     * @param assertion the SAML 2.0 based Assertion whose XML Digital Signature is to be validated
      * @throws SSOException if an error occurs during the signature validation
      */
     private void validateSignature(Response response, Assertion assertion) throws SSOException {
         if (SSOAgentDataHolder.getInstance().getObject() != null) {
-            //  Custom implementation of signature validation
+            //  custom implementation of signature validation
             SignatureValidator signatureValidatorUtility = (SignatureValidator) SSOAgentDataHolder.
                     getInstance().getObject();
             signatureValidatorUtility.validateSignature(response, assertion, ssoAgentConfiguration);
         } else {
-            //  If custom implementation not found, execute the default implementation
+            //  if custom implementation not found, execute the default implementation
             if (ssoAgentConfiguration.getSAML2().isResponseSigned()) {
                 if (response.getSignature() == null) {
-                    throw new SSOException("SAML 2.0 Response signing is enabled, but signature element not "
-                            + "found in SAML 2.0 Response element");
+                    throw new SSOException("SAML 2.0 Response signing is enabled, but signature element not " +
+                            "found in SAML 2.0 Response element");
                 } else {
                     try {
                         org.opensaml.xml.signature.SignatureValidator validator =
@@ -665,16 +668,14 @@ class SAMLSSOManager {
                                         ssoAgentConfiguration.getSAML2().getSSOX509Credential()));
                         validator.validate(response.getSignature());
                     } catch (ValidationException e) {
-                        //  TODO: logging
-//                        logger.log(Level.FINE, "Validation exception : ", e);
-                        throw new SSOException("Signature validation failed for SAML Response");
+                        throw new SSOException("Signature validation failed for SAML 2.0 Response", e);
                     }
                 }
             }
             if (ssoAgentConfiguration.getSAML2().isAssertionSigned()) {
                 if (assertion.getSignature() == null) {
-                    throw new SSOException("SAML 2.0 Assertion signing is enabled, but signature element not "
-                            + "found in SAML 2.0 Assertion element");
+                    throw new SSOException("SAML 2.0 Assertion signing is enabled, but signature element not " +
+                            "found in SAML 2.0 Assertion element");
                 } else {
                     try {
                         org.opensaml.xml.signature.SignatureValidator validator =
@@ -682,9 +683,7 @@ class SAMLSSOManager {
                                         ssoAgentConfiguration.getSAML2().getSSOX509Credential()));
                         validator.validate(assertion.getSignature());
                     } catch (ValidationException e) {
-                        //  TODO: logging
-//                        logger.log(Level.FINE, "Validation exception : ", e);
-                        throw new SSOException("Signature validation failed for SAML 2.0 Assertion");
+                        throw new SSOException("Signature validation failed for SAML 2.0 Assertion", e);
                     }
                 }
             }

@@ -41,7 +41,7 @@ public class X509CredentialImplementation implements X509Credential {
     private X509Certificate entityCertificate;
     private PrivateKey privateKey;
 
-    public X509CredentialImplementation(X509Certificate certificate) {
+    X509CredentialImplementation(X509Certificate certificate) {
         publicKey = certificate.getPublicKey();
         entityCertificate = certificate;
     }

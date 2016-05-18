@@ -575,20 +575,20 @@
         <jsr.api.version>1.1.1</jsr.api.version>
         <junit.version>4.12</junit.version>
         <libthrift.version>0.9.3</libthrift.version>
-        <libthrift.shade.version>0.9.4.wso2v1-SNAPSHOT</libthrift.shade.version>
+        <libthrift.shade.version>${libthrift.version}.wso2v1-SNAPSHOT</libthrift.shade.version>
         <org.apache.santuario.xmlsec.version>2.0.6</org.apache.santuario.xmlsec.version>
         <org.apache.httpcomponents.httpclient.version>4.3.1.wso2v2</org.apache.httpcomponents.httpclient.version>
         <org.jacoco.ant.version>0.7.5.201505241946</org.jacoco.ant.version>
         <org.mockito.mockito-all.version>1.10.19</org.mockito.mockito-all.version>
         <org.opensaml.version>2.6.4</org.opensaml.version>
-        <org.opensaml.shade.version>2.6.4.wso2v1-SNAPSHOT</org.opensaml.shade.version>
+        <org.opensaml.shade.version>${org.opensaml.version}.wso2v1-SNAPSHOT</org.opensaml.shade.version>
         <org.opensaml.xmltooling.version>1.4.4</org.opensaml.xmltooling.version>
         <org.wso2.orbit.com.lmax.disruptor>3.3.2.wso2v2</org.wso2.orbit.com.lmax.disruptor>
         <runtime.cxf.version>3.1.5</runtime.cxf.version>
         <runtime.spring.version>4.2.5.RELEASE</runtime.spring.version>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <slf4j.shade.version>1.7.22.wso2v1-SNAPSHOT</slf4j.shade.version>
+        <slf4j.shade.version>${slf4j.version}.wso2v1-SNAPSHOT</slf4j.shade.version>
         <testng.version>6.9.10</testng.version>
         <uaparser.version>1.3.0.wso2v1</uaparser.version>
         <xerces.xerces.version>2.4.0</xerces.xerces.version>

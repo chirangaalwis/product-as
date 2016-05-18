@@ -154,7 +154,6 @@ public class SAMLSingleSignOn extends SingleSignOn {
             }
         } catch (SSOException e) {
             containerLog.error("An error has occurred when processing the request", e);
-            //TODO: consider throws
             getNext().invoke(request, response);
         }
 
