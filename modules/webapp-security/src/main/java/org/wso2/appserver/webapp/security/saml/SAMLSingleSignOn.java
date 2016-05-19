@@ -132,21 +132,22 @@ public class SAMLSingleSignOn extends SingleSignOn {
         }
 
         try {
-            if (requestResolver.isSAML2SLORequest()) {
+            /*if (requestResolver.isSAML2SLORequest()) {
                 //  handles single logout request from the identity provider
                 containerLog.info("Processing Single Logout Request...");
                 SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
                 manager.performSingleLogout(request);
-            } else if (requestResolver.isSAML2SSOResponse()) {
+            } else */
+            if (requestResolver.isSAML2SSOResponse()) {
                 containerLog.info("Processing a SAML 2.0 Response...");
                 handleResponse(request, response);
                 return;
             } else if (requestResolver.isSLOURL()) {
                 //  handles single logout request initiated directly at the service provider
-                containerLog.info("Processing Single Logout URL...");
+                containerLog.info("Processing SAML 2.0 Single Logout URL...");
                 handleLogoutRequest(request, response);
                 return;
-            } else if ((requestResolver.isSAMLAuthnRequestURL()) || (request.getSession(false) == null) || (
+            } else if ((requestResolver.isSAML2AuthnRequestURL()) || (request.getSession(false) == null) || (
                     request.getSession(false).getAttribute(Constants.SESSION_BEAN) == null)) {
                 containerLog.info("Processing an SAML 2.0 Authentication Request...");
                 handleUnauthenticatedRequest(request, response);
@@ -345,7 +346,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
                 //  this will be done if the 'handle-consumer-url-after-slo' property is set to true for the web app
                 //  concerned, the user can set a custom path to redirect after single-logout by defining a custom
                 //  property named 'redirectPathAfterSLO' in the WSO2 Application Server web-app descriptor
-                if ((redirectPath == null) || (redirectPath.equals(""))) {
+                if (!((redirectPath == null) || (redirectPath.equals("")))) {
                     response.sendRedirect(redirectPath);
                 }
             }

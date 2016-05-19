@@ -16,6 +16,7 @@
 package org.wso2.appserver.webapp.security.agent;
 
 import org.opensaml.common.xml.SAMLConstants;
+//import org.opensaml.saml2.core.LogoutResponse;
 import org.wso2.appserver.webapp.security.Constants;
 
 import javax.servlet.http.HttpServletRequest;
@@ -54,7 +55,7 @@ public class SSOAgentRequestResolver {
      * @return true if request URI matches the configured URL to send SAML 2.0 single-sign-on (SSO) an Authentication
      * Request, else false
      */
-    public boolean isSAMLAuthnRequestURL() {
+    public boolean isSAML2AuthnRequestURL() {
         return (ssoAgentConfiguration.isSSOEnabled()) && (request.getRequestURI().
                 endsWith(ssoAgentConfiguration.getRequestURLPostfix()));
     }
@@ -79,8 +80,8 @@ public class SSOAgentRequestResolver {
      * service provider
      */
     public boolean isSAML2SSOResponse() {
-        return (ssoAgentConfiguration.isSSOEnabled()) && (request.getParameter(Constants.HTTP_POST_PARAM_SAML_RESPONSE)
-                != null);
+        return (ssoAgentConfiguration.isSSOEnabled()) &&
+                (request.getParameter(Constants.HTTP_POST_PARAM_SAML_RESPONSE) != null);
     }
 
     /**
@@ -88,10 +89,10 @@ public class SSOAgentRequestResolver {
      *
      * @return true if the request is an identity provider initiated SAML 2.0 single-logout (SLO) request, else false
      */
-    public boolean isSAML2SLORequest() {
-        return (ssoAgentConfiguration.isSSOEnabled()) && (request.
-                getParameter(Constants.HTTP_POST_PARAM_SAML_REQUEST) != null);
-    }
+    /*public boolean isSAML2SLORequest() {
+        return (ssoAgentConfiguration.isSSOEnabled()) &&
+                (request.getParameter(LogoutResponse.DEFAULT_ELEMENT_LOCAL_NAME) != null);
+    }*/
 
     /**
      * Returns true if the request URI matches globally configured URL for sending session participant initiated

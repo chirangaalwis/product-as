@@ -71,7 +71,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -114,7 +113,7 @@ class SAMLSSOManager {
     String handleAuthnRequestForPOSTBinding(Request request) throws SSOException {
         RequestAbstractType requestMessage = buildAuthnRequest(request);
         if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
-            requestMessage = SSOUtils.setSignature((AuthnRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
+            requestMessage = SSOUtils.setSignature(requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
                     new X509CredentialImplementation(ssoAgentConfiguration.getSAML2().getSSOX509Credential()));
         }
 
@@ -128,19 +127,16 @@ class SAMLSSOManager {
      * @return the HTML payload to be transmitted
      * @throws SSOException if an error occurs when handling LogoutRequest
      */
-    String handleLogoutRequestForPOSTBinding(HttpServletRequest request) throws SSOException {
-        LoggedInSession session = (LoggedInSession) request.getSession(false).
-                getAttribute(Constants.SESSION_BEAN);
+    String handleLogoutRequestForPOSTBinding(Request request) throws SSOException {
+        LoggedInSession session = (LoggedInSession) request.getSession(false).getAttribute(Constants.SESSION_BEAN);
         RequestAbstractType requestMessage;
         if (session != null) {
             requestMessage = buildLogoutRequest(session.getSAML2SSO().getSubjectId(),
                     session.getSAML2SSO().getSessionIndex());
-            /*if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
-                requestMessage = SSOUtils.
-                        setSignature((LogoutRequest) requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
-                                new X509CredentialImplementation(
-                                        ssoAgentConfiguration.getSAML2().getSSOAgentX509Credential()));
-            }*/
+            if (ssoAgentConfiguration.getSAML2().isRequestSigned()) {
+                requestMessage = SSOUtils.setSignature(requestMessage, XMLSignature.ALGO_ID_SIGNATURE_RSA,
+                        new X509CredentialImplementation(ssoAgentConfiguration.getSAML2().getSSOX509Credential()));
+            }
         } else {
             throw new SSOException(
                     "Single-logout (SLO) Request cannot be built. Single-sign-on (SSO) Session is null.");
@@ -168,9 +164,8 @@ class SAMLSSOManager {
      * @return the Identity Provider URL with the query string appended based on the SAML 2.0 Request and configurations
      * @throws SSOException if an error occurs when handling LogoutRequest
      */
-    String handleLogoutRequestForRedirectBinding(HttpServletRequest request) throws SSOException {
-        LoggedInSession session = (LoggedInSession) request.getSession(false).
-                getAttribute(Constants.SESSION_BEAN);
+    String handleLogoutRequestForRedirectBinding(Request request) throws SSOException {
+        LoggedInSession session = (LoggedInSession) request.getSession(false).getAttribute(Constants.SESSION_BEAN);
         RequestAbstractType requestMessage;
         if (session != null) {
             requestMessage = buildLogoutRequest(session.getSAML2SSO().getSubjectId(),
@@ -382,28 +377,29 @@ class SAMLSSOManager {
         //  creates a Logout Request instance
         LogoutRequest logoutRequest = new LogoutRequestBuilder().buildObject();
 
-        logoutRequest.setID(SSOUtils.createID());
-        logoutRequest.setDestination(ssoAgentConfiguration.getSAML2().getIdPURL());
-
         DateTime issueInstant = new DateTime();
-        logoutRequest.setIssueInstant(issueInstant);
-        //  time at which the request expires, after which the recipient may discard the message
-        logoutRequest.setNotOnOrAfter(new DateTime(issueInstant.getMillis() + (5 * 60 * 1000)));
 
         Issuer issuer = new IssuerBuilder().buildObject();
         issuer.setValue(ssoAgentConfiguration.getSAML2().getSPEntityId());
-        logoutRequest.setIssuer(issuer);
 
         NameID nameId = new NameIDBuilder().buildObject();
         nameId.setFormat("urn:oasis:names:tc:SAML:2.0:nameid-format:entity");
         nameId.setValue(user);
-        logoutRequest.setNameID(nameId);
 
         SessionIndex sessionIndexElement = new SessionIndexBuilder().buildObject();
         sessionIndexElement.setSessionIndex(sessionIndex);
-        logoutRequest.getSessionIndexes().add(sessionIndexElement);
 
-        //  Indicates the reason for the logout
+        //  sets the mandatory attributes of a SAML 2.0 Request
+        logoutRequest.setID(SSOUtils.createID());
+        logoutRequest.setIssueInstant(issueInstant);
+
+        logoutRequest.setDestination(ssoAgentConfiguration.getSAML2().getIdPURL());
+        //  time at which the request expires, after which the recipient may discard the message
+        logoutRequest.setNotOnOrAfter(new DateTime(issueInstant.getMillis() + (5 * 60 * 1000)));
+        logoutRequest.setIssuer(issuer);
+        logoutRequest.setNameID(nameId);
+        logoutRequest.getSessionIndexes().add(sessionIndexElement);
+        //  indicates the reason for the logout
         logoutRequest.setReason("Single Logout");
 
         return logoutRequest;
@@ -555,37 +551,43 @@ class SAMLSSOManager {
         XMLObject saml2Object = null;
 
         if (request.getParameter(Constants.HTTP_POST_PARAM_SAML_REQUEST) != null) {
-            saml2Object = SSOUtils.unmarshall(
-                    new String(Base64.decode(request.getParameter(Constants.HTTP_POST_PARAM_SAML_REQUEST)),
-                            Charset.forName(Constants.UTF8_ENC)));
+            saml2Object = SSOUtils.unmarshall(new String(Base64.decode(request.getParameter(
+                    Constants.HTTP_POST_PARAM_SAML_REQUEST)), Charset.forName(Constants.UTF8_ENC)));
         }
         if (saml2Object == null) {
-            saml2Object = SSOUtils.unmarshall(
-                    new String(Base64.decode(request.getParameter(Constants.HTTP_POST_PARAM_SAML_RESPONSE)),
-                            Charset.forName(Constants.UTF8_ENC)));
+            saml2Object = SSOUtils.unmarshall(new String(Base64.decode(request.getParameter(
+                    Constants.HTTP_POST_PARAM_SAML_RESPONSE)), Charset.forName(Constants.UTF8_ENC)));
         }
         if (saml2Object instanceof LogoutRequest) {
             LogoutRequest logoutRequest = (LogoutRequest) saml2Object;
-            logoutRequest.getSessionIndexes().stream().findFirst().ifPresent(
-                    sessionIndex -> SSOAgentSessionManager.invalidateAllSessions(sessionIndex.getSessionIndex()).
-                            stream().forEach(HttpSession::invalidate));
+            logoutRequest.getSessionIndexes()
+                    .stream()
+                    .findFirst()
+                    .ifPresent(
+                            index -> SSOAgentSessionManager.invalidateAllSessions(index.getSessionIndex())
+                                    .stream()
+                                    .forEach(HttpSession::invalidate));
         } else if (saml2Object instanceof LogoutResponse) {
-            Optional.ofNullable(request.getSession(false)).ifPresent(session -> {
-                //  not invalidating session explicitly since there may be other listeners
-                //  still waiting to get triggered and at the end of the chain session needs to be
-                //  invalidated by the system.
-                Set<HttpSession> sessions = SSOAgentSessionManager.invalidateAllSessions(request.getSession(false));
-                sessions.stream().forEach(httpSession -> {
-                    try {
-                        httpSession.invalidate();
-                    } catch (IllegalStateException ignore) {
-                        Log containerLog = request.getHost().getLogger();
-                        if (containerLog.isDebugEnabled()) {
-                            containerLog.debug("Ignoring exception : ", ignore);
-                        }
-                    }
-                });
-            });
+            Optional.ofNullable(request.getSession(false))
+                    .ifPresent(session -> {
+                        //  not invalidating session explicitly since there may be other listeners
+                        //  still waiting to get triggered and at the end of the chain session needs to be
+                        //  invalidated by the system.
+                        Set<HttpSession> sessions = SSOAgentSessionManager.invalidateAllSessions(request.getSession
+                                (false));
+                        sessions
+                                .stream()
+                                .forEach(httpSession -> {
+                                    try {
+                                        httpSession.invalidate();
+                                    } catch (IllegalStateException ignore) {
+                                        Log containerLog = request.getHost().getLogger();
+                                        if (containerLog.isDebugEnabled()) {
+                                            containerLog.debug("Ignoring exception : ", ignore);
+                                        }
+                                    }
+                                });
+                    });
         } else {
             throw new SSOException("Invalid SAML 2.0 Single Logout Request/Response.");
         }

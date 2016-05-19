@@ -25,7 +25,6 @@ import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.xml.SAMLConstants;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.AttributeStatement;
-import org.opensaml.saml2.core.AuthnRequest;
 import org.opensaml.saml2.core.EncryptedAssertion;
 import org.opensaml.saml2.core.RequestAbstractType;
 import org.opensaml.saml2.encryption.Decrypter;
@@ -357,36 +356,36 @@ public class SSOUtils {
     }
 
     /**
-     * Applies the XML Digital Signature to the SAML 2.0 based Authentication Request (AuthnRequest).
+     * Applies the XML Digital Signature to the SAML 2.0 based Request.
      *
-     * @param authnRequest       the SAML 2.0 based Authentication Request (AuthnRequest)
+     * @param request       the SAML 2.0 based Request
      * @param signatureAlgorithm the algorithm used to compute the signature
      * @param credential         the signature signing credential
-     * @return the SAML 2.0 based Authentication Request (AuthnRequest) with XML Digital Signature set
-     * @throws SSOException if an error occurs while signing the SAML AuthnRequest message
+     * @return the SAML 2.0 based Request with XML Digital Signature set
+     * @throws SSOException if an error occurs while signing the SAML 2.0 based Request message
      */
-    public static AuthnRequest setSignature(AuthnRequest authnRequest, String signatureAlgorithm,
-            X509Credential credential) throws SSOException {
+    public static RequestAbstractType setSignature(RequestAbstractType request, String signatureAlgorithm,
+                                                   X509Credential credential) throws SSOException {
         try {
             Signature signature = setSignatureRaw(signatureAlgorithm, credential);
-            authnRequest.setSignature(signature);
+            request.setSignature(signature);
 
             List<Signature> signatureList = new ArrayList<>();
             signatureList.add(signature);
 
             //  marshall and sign
             MarshallerFactory marshallerFactory = org.opensaml.xml.Configuration.getMarshallerFactory();
-            Marshaller marshaller = marshallerFactory.getMarshaller(authnRequest);
-            marshaller.marshall(authnRequest);
+            Marshaller marshaller = marshallerFactory.getMarshaller(request);
+            marshaller.marshall(request);
 
             //  initializes and configures the library
             Init.init();
             //  signer is responsible for creating the digital signatures for the given XML Objects,
             //  signs the XML Objects based on the given order of the Signature list
             Signer.signObjects(signatureList);
-            return authnRequest;
+            return request;
         } catch (MarshallingException | SignatureException e) {
-            throw new SSOException("Error while signing the SAML 2.0 AuthnRequest message", e);
+            throw new SSOException("Error while signing the SAML 2.0 Request message", e);
         }
     }
 
