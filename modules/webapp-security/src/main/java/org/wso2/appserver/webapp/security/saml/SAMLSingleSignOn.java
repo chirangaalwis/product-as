@@ -132,12 +132,6 @@ public class SAMLSingleSignOn extends SingleSignOn {
         }
 
         try {
-            /*if (requestResolver.isSAML2SLORequest()) {
-                //  handles single logout request from the identity provider
-                containerLog.info("Processing Single Logout Request...");
-                SAMLSSOManager manager = new SAMLSSOManager(agentConfiguration);
-                manager.performSingleLogout(request);
-            } else */
             if (requestResolver.isSAML2SSOResponse()) {
                 containerLog.info("Processing a SAML 2.0 Response...");
                 handleResponse(request, response);
@@ -165,7 +159,7 @@ public class SAMLSingleSignOn extends SingleSignOn {
     /**
      * Sets default configuration values to chosen configurations, if not set.
      *
-     * @param request       the servlet request processed
+     * @param request the servlet request processed
      */
     private void setDefaultConfigurations(Request request) {
         contextConfiguration.setApplicationServerURL(Optional.ofNullable(contextConfiguration.getApplicationServerURL())

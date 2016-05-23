@@ -23,5 +23,9 @@ package org.wso2.appserver.webapp.security;
 public class TestConstants {
     public static final String WEB_APP_BASE = "webapps";
     public static final String CONTEXT_PATH = "/foo-app";
-    public static final String APPLICATION_SERVER_URL_DEFAULT = "https://localhost:8443";
+
+    private static final String DEFAULT_HOST = "localhost";
+    private static final String SSL_PROTOCOL = "https";
+    private static final int SSL_PORT = 8443;
+    public static final String APPLICATION_SERVER_URL_DEFAULT = SSL_PROTOCOL + "://" + DEFAULT_HOST + ":" + SSL_PORT;
 }

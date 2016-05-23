@@ -547,7 +547,7 @@ class SAMLSSOManager {
      * @param request the HTTP servlet request
      * @throws SSOException if the SAML 2.0 Single Logout Request/Response is invalid
      */
-    void performSingleLogout(Request request) throws SSOException {
+    private void performSingleLogout(Request request) throws SSOException {
         XMLObject saml2Object = null;
 
         if (request.getParameter(Constants.HTTP_POST_PARAM_SAML_REQUEST) != null) {

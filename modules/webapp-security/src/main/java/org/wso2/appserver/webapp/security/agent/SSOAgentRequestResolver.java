@@ -85,16 +85,6 @@ public class SSOAgentRequestResolver {
     }
 
     /**
-     * Returns true if the request is an identity provider initiated SAML 2.0 single-logout (SLO) request, else false.
-     *
-     * @return true if the request is an identity provider initiated SAML 2.0 single-logout (SLO) request, else false
-     */
-    /*public boolean isSAML2SLORequest() {
-        return (ssoAgentConfiguration.isSSOEnabled()) &&
-                (request.getParameter(LogoutResponse.DEFAULT_ELEMENT_LOCAL_NAME) != null);
-    }*/
-
-    /**
      * Returns true if the request URI matches globally configured URL for sending session participant initiated
      * SAML 2.0 single-logout (SLO) request(s), else false.
      *
