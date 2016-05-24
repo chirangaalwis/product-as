@@ -15,6 +15,10 @@
  */
 package org.wso2.appserver.webapp.security.utils;
 
+import org.apache.catalina.Host;
+import org.apache.catalina.connector.Connector;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.core.StandardHost;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.appserver.configuration.context.WebAppSingleSignOn;
@@ -37,6 +41,43 @@ import java.util.stream.IntStream;
  * @since 6.0.0
  */
 public class SSOUtilsTest {
+    @Test(description = "Tests the construction of Application Server URL for a sample request")
+    public void testConstructionOfApplicationServerURL() {
+        Connector connector = new Connector();
+        connector.setProtocol(TestConstants.SSL_PROTOCOL);
+        connector.setPort(TestConstants.SSL_PORT);
+
+        Request request = new Request();
+        request.setConnector(connector);
+
+        Host host = new StandardHost();
+        host.setName(TestConstants.DEFAULT_TOMCAT_HOST);
+        request.getMappingData().host = host;
+
+        Optional<String> actual = SSOUtils.constructApplicationServerURL(request);
+        if (actual.isPresent()) {
+            Assert.assertEquals(actual.get(), TestConstants.APPLICATION_SERVER_URL_DEFAULT);
+        } else {
+            Assert.fail();
+        }
+    }
+
+    @Test(description = "Tests the construction of Application Server URL for an invalid 'null' request")
+    public void testConstructionOfApplicationServerURLFromInvalidRequest() {
+        Optional<String> actual = SSOUtils.constructApplicationServerURL(null);
+        Assert.assertTrue(!actual.isPresent());
+    }
+
+    @Test(description = "Checks for the validity of the split query parameter string")
+    public void testQueryParamStringSplit() {
+        Map<String, String[]> expected = getExpectedQueryParams();
+
+        String testQueryString = "key1=key1val1&key1=key1val2&key2=key2val1&key2=key2val2&key3=key3val1";
+        Map<String, String[]> actual = SSOUtils.getSplitQueryParameters(testQueryString);
+
+        Assert.assertTrue(equalMaps(expected, actual));
+    }
+
     @Test(description = "Checks the uniqueness of the id generated")
     public void testUniqueIDCreation() {
         List<String> ids = new ArrayList<>();
@@ -50,16 +91,6 @@ public class SSOUtilsTest {
                 .forEach(uniqueIds::add);
 
         Assert.assertTrue(ids.size() == uniqueIds.size());
-    }
-
-    @Test(description = "Checks for the validity of the split query parameter string")
-    public void testQueryParamStringSplit() {
-        Map<String, String[]> expected = getExpectedQueryParams();
-
-        String testQueryString = "key1=key1val1&key1=key1val2&key2=key2val1&key2=key2val2&key3=key3val1";
-        Map<String, String[]> actual = SSOUtils.getSplitQueryParameters(testQueryString);
-
-        Assert.assertTrue(equalMaps(expected, actual));
     }
 
     @Test(description = "Checks the validity of the issuer ID generated from a valid context path")

@@ -20,6 +20,7 @@ limitations under the License.
     <test name="app-server-web-app-security-unit-tests" preserve-order="true" parallel="false">
         <classes>
             <class name="org.wso2.appserver.webapp.security.utils.SSOUtilsTest"/>
+            <class name="org.wso2.appserver.webapp.security.agent.SSOAgentConfigurationTest"/>
         </classes>
     </test>
 </suite>

@@ -55,15 +55,15 @@ public class SSOAgentConfiguration {
         saml2 = new SAML2();
     }
 
-    public Boolean isSSOEnabled() {
+    Boolean isSSOEnabled() {
         return isSSOEnabled;
     }
 
-    public String getRequestURLPostfix() {
+    String getRequestURLPostfix() {
         return requestURLPostfix;
     }
 
-    public Set<String> getSkipURIs() {
+    Set<String> getSkipURIs() {
         return skipURIs;
     }
 
@@ -300,7 +300,7 @@ public class SSOAgentConfiguration {
             return isSLOEnabled;
         }
 
-        public String getSLOURLPostfix() {
+        String getSLOURLPostfix() {
             return sloURLPostfix;
         }
     }

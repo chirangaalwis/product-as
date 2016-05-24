@@ -50,6 +50,7 @@ public class WebAppClassLoading {
     void merge(WebAppClassLoading configuration) {
         Optional.ofNullable(configuration)
                 .ifPresent(mergeable ->
-                        environments = Optional.ofNullable(mergeable.environments).orElse(environments));
+                        environments = Optional.ofNullable(mergeable.environments)
+                                .orElse(environments));
     }
 }

@@ -160,7 +160,7 @@ public class SSOUtils {
         if (request == null) {
             return Optional.empty();
         }
-        StringBuilder appServerURL = new StringBuilder(request.getProtocol() + "://");
+        StringBuilder appServerURL = new StringBuilder(request.getConnector().getProtocol() + "://");
         String requestHost = request.getHost().getName();
         int requestPort = request.getConnector().getPort();
 

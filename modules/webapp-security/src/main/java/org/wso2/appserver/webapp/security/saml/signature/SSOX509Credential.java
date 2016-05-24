@@ -71,8 +71,8 @@ public class SSOX509Credential {
                     entityCertificate = (X509Certificate) keyStore.getCertificate(idpCertificateAlias);
                 }
             } catch (KeyStoreException e) {
-                throw new SSOException("Error occurred while retrieving public certificate with certificateAlias "
-                        + idpCertificateAlias);
+                throw new SSOException("Error occurred while retrieving public certificate with certificateAlias " +
+                        idpCertificateAlias);
             }
 
             String privateKeyAlias = securityConfiguration.getKeystore().getKeyAlias();
