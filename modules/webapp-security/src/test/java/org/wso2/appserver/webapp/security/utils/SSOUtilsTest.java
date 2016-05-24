@@ -22,8 +22,12 @@ import org.apache.catalina.core.StandardHost;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.appserver.configuration.context.WebAppSingleSignOn;
+import org.wso2.appserver.configuration.server.AppServerSecurity;
 import org.wso2.appserver.webapp.security.Constants;
 import org.wso2.appserver.webapp.security.TestConstants;
+import org.wso2.appserver.webapp.security.TestUtils;
+import org.wso2.appserver.webapp.security.bean.RelayState;
+import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +39,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /**
  * This class defines unit test cases for single-sign-on (SSO) utility functions.
  *
@@ -43,11 +50,11 @@ import java.util.stream.IntStream;
 public class SSOUtilsTest {
     @Test(description = "Tests the construction of Application Server URL for a sample request")
     public void testConstructionOfApplicationServerURL() {
+        Request request = new Request();
+
         Connector connector = new Connector();
         connector.setProtocol(TestConstants.SSL_PROTOCOL);
         connector.setPort(TestConstants.SSL_PORT);
-
-        Request request = new Request();
         request.setConnector(connector);
 
         Host host = new StandardHost();
@@ -56,7 +63,7 @@ public class SSOUtilsTest {
 
         Optional<String> actual = SSOUtils.constructApplicationServerURL(request);
         if (actual.isPresent()) {
-            Assert.assertEquals(actual.get(), TestConstants.APPLICATION_SERVER_URL_DEFAULT);
+            Assert.assertEquals(actual.get(), TestConstants.DEFAULT_APPLICATION_SERVER_URL);
         } else {
             Assert.fail();
         }
@@ -68,7 +75,7 @@ public class SSOUtilsTest {
         Assert.assertTrue(!actual.isPresent());
     }
 
-    @Test(description = "Checks for the validity of the split query parameter string")
+    @Test(description = "Tests the validity of the split query parameter string")
     public void testQueryParamStringSplit() {
         Map<String, String[]> expected = getExpectedQueryParams();
 
@@ -78,7 +85,7 @@ public class SSOUtilsTest {
         Assert.assertTrue(equalMaps(expected, actual));
     }
 
-    @Test(description = "Checks the uniqueness of the id generated")
+    @Test(description = "Tests the uniqueness of the id generated")
     public void testUniqueIDCreation() {
         List<String> ids = new ArrayList<>();
         IntStream
@@ -93,7 +100,7 @@ public class SSOUtilsTest {
         Assert.assertTrue(ids.size() == uniqueIds.size());
     }
 
-    @Test(description = "Checks the validity of the issuer ID generated from a valid context path")
+    @Test(description = "Tests the validity of the issuer ID generated from a valid context path")
     public void testGeneratingIssuerID() {
         String contextPath = "/" + TestConstants.WEB_APP_BASE + TestConstants.CONTEXT_PATH;
 
@@ -102,34 +109,89 @@ public class SSOUtilsTest {
                 (actualIssuerID.isPresent()) && (actualIssuerID.get().equals(TestConstants.CONTEXT_PATH.substring(1))));
     }
 
-    @Test(description = "Checks the validity of the issuer ID generated from an invalid context path")
+    @Test(description = "Tests the validity of the issuer ID generated from an invalid context path")
     public void testGeneratingIssuerIDFromInvalidContextPath() {
         Optional<String> actualIssuerID = SSOUtils.generateIssuerID(null, TestConstants.WEB_APP_BASE);
         Assert.assertTrue(!actualIssuerID.isPresent());
     }
 
-    @Test(description = "Checks the validity of the consumer URL generated from a valid context path")
+    @Test(description = "Tests the validity of the consumer URL generated from a valid context path")
     public void testGeneratingConsumerURL() {
         WebAppSingleSignOn ssoConfiguration = new WebAppSingleSignOn();
-        ssoConfiguration.setApplicationServerURL(TestConstants.APPLICATION_SERVER_URL_DEFAULT);
+        ssoConfiguration.setApplicationServerURL(TestConstants.DEFAULT_APPLICATION_SERVER_URL);
         ssoConfiguration.setConsumerURLPostfix(Constants.DEFAULT_CONSUMER_URL_POSTFIX);
 
-        String expected = TestConstants.APPLICATION_SERVER_URL_DEFAULT + TestConstants.CONTEXT_PATH +
+        String expected = TestConstants.DEFAULT_APPLICATION_SERVER_URL + TestConstants.CONTEXT_PATH +
                 Constants.DEFAULT_CONSUMER_URL_POSTFIX;
         Optional<String> actual = SSOUtils.generateConsumerURL(TestConstants.CONTEXT_PATH, ssoConfiguration);
 
         Assert.assertTrue((actual.isPresent()) && (actual.get().equals(expected)));
     }
 
-    @Test(description = "Checks the validity of the consumer URL generated from an invalid context path")
+    @Test(description = "Tests the validity of the consumer URL generated from an invalid context path")
     public void testGeneratingConsumerURLFromInvalidContextPath() {
         WebAppSingleSignOn ssoConfiguration = new WebAppSingleSignOn();
-        ssoConfiguration.setApplicationServerURL(TestConstants.APPLICATION_SERVER_URL_DEFAULT);
+        ssoConfiguration.setApplicationServerURL(TestConstants.DEFAULT_APPLICATION_SERVER_URL);
         ssoConfiguration.setConsumerURLPostfix(Constants.DEFAULT_CONSUMER_URL_POSTFIX);
 
         Optional<String> actual = SSOUtils.generateConsumerURL(null, ssoConfiguration);
 
         Assert.assertTrue(!actual.isPresent());
+    }
+
+    @Test(description = "Tests the validity of the relay state instance generated from the sample request")
+    public void testGeneratingRelayState() {
+        Request request = mock(Request.class);
+
+        when(request.getRequestURI()).thenReturn(TestConstants.NON_AUTHN_REQ_URI);
+        when(request.getQueryString()).thenReturn(TestConstants.DEFAULT_QUERY_PARAMS);
+        when(request.getParameterMap()).thenReturn(getExpectedQueryParams());
+
+        RelayState actual = SSOUtils.generateRelayState(request);
+
+        boolean equalURI = actual.getRequestedURL().equals(TestConstants.NON_AUTHN_REQ_URI);
+        boolean equalQueryString = actual.getRequestQueryString().orElse("").equals(TestConstants.DEFAULT_QUERY_PARAMS);
+        @SuppressWarnings("unchecked")
+        boolean equalParams = equalMaps(getExpectedQueryParams(),
+                actual.getRequestParameters().orElse(new HashMap<>()));
+
+        Assert.assertTrue(equalURI && equalQueryString && equalParams);
+    }
+
+    @Test(description = "Tests the generation of keystore from invalid file path",
+            expectedExceptions = {SSOException.class})
+    public void testGeneratingKeyStoreFromInvalidPath() throws SSOException {
+        AppServerSecurity configuration = TestUtils.getDefaultServerSecurityConfiguration();
+        AppServerSecurity.Keystore keystore = configuration.getKeystore();
+        keystore.setLocation(TestConstants.TEST_RESOURCES_LOCATION + "/conf/wso2carbon.jks");
+
+        SSOUtils.generateKeyStore(configuration);
+    }
+
+    @Test(description = "Tests the generation of keystore from invalid password")
+    public void testGeneratingKeyStoreFromInvalidPassword() throws SSOException {
+        AppServerSecurity configuration = TestUtils.getDefaultServerSecurityConfiguration();
+        AppServerSecurity.Keystore keystoreConfiguration = configuration.getKeystore();
+        keystoreConfiguration.setPassword(null);
+
+        Optional keystore = SSOUtils.generateKeyStore(configuration);
+        Assert.assertTrue(!keystore.isPresent());
+    }
+
+    @Test(description = "Tests the geenration of keystore from invalid set of configurations")
+    public void testGeneratingKeyStoreFromInvalidConfigurations() throws SSOException {
+        Optional keystore = SSOUtils.generateKeyStore(null);
+        Assert.assertTrue(!keystore.isPresent());
+    }
+
+    @Test(description = "Tests the generation of keystore by providing a non-matching keystore type name",
+            expectedExceptions = {SSOException.class})
+    public void testGeneratingKeyStoreFromInvalidStoreType() throws SSOException {
+        AppServerSecurity configuration = TestUtils.getDefaultServerSecurityConfiguration();
+        AppServerSecurity.Keystore keystore = configuration.getKeystore();
+        keystore.setType("PKCS");
+
+        SSOUtils.generateKeyStore(configuration);
     }
 
     private static Map<String, String[]> getExpectedQueryParams() {

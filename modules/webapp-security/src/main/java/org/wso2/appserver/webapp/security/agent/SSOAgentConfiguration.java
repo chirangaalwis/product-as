@@ -176,20 +176,17 @@ public class SSOAgentConfiguration {
 
             if ((saml2.isAssertionSigned || saml2.isAssertionEncrypted ||
                     saml2.isResponseSigned || saml2.isRequestSigned) && (saml2.ssoX509Credential == null)) {
-                if ((containerLog != null) && (containerLog.isDebugEnabled())) {
-                    containerLog.debug("\'SSOX509Credential\' not configured, defaulting to " +
-                            SSOX509Credential.class.getName());
-                }
+                throw new SSOException("'SSOX509Credential' not configured when signature application is requested");
             }
 
-            if ((saml2.isAssertionSigned || saml2.isResponseSigned) && (saml2.ssoX509Credential != null
-                    && saml2.ssoX509Credential.getEntityCertificate() == null)) {
+            if ((saml2.isAssertionSigned || saml2.isResponseSigned) &&
+                    saml2.ssoX509Credential.getEntityCertificate() == null) {
                 throw new SSOException("Public certificate of identity provider not configured");
             }
 
             if ((saml2.isRequestSigned || saml2.isAssertionEncrypted) && (saml2.ssoX509Credential != null
                     && saml2.ssoX509Credential.getPrivateKey() == null)) {
-                throw new SSOException("Private key of SP not configured");
+                throw new SSOException("Private key of service provider (SP) not configured");
             }
         }
     }

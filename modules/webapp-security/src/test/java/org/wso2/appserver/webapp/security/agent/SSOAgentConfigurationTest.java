@@ -15,10 +15,13 @@
  */
 package org.wso2.appserver.webapp.security.agent;
 
+import org.testng.annotations.Test;
 import org.wso2.appserver.configuration.context.WebAppSingleSignOn;
 import org.wso2.appserver.configuration.server.AppServerSecurity;
 import org.wso2.appserver.configuration.server.AppServerSingleSignOn;
-import org.wso2.appserver.webapp.security.TestConstants;
+import org.wso2.appserver.webapp.security.TestUtils;
+import org.wso2.appserver.webapp.security.saml.signature.SSOX509Credential;
+import org.wso2.appserver.webapp.security.utils.exception.SSOException;
 
 /**
  * This is a class which defines unit test cases for single-sign-on (SSO) agent configurations.
@@ -26,55 +29,80 @@ import org.wso2.appserver.webapp.security.TestConstants;
  * @since 6.0.0
  */
 public class SSOAgentConfigurationTest {
-    //  TODO: copy JKS file to test resources
-    //  TODO: mechanism to validate the happy path
+    @Test(description = "Tests the generation of valid single-sign-on (SSO) agent configuration object")
+    public void testValidSSOConfiguration() throws SSOException {
+        SSOAgentConfiguration agentConfiguration = new SSOAgentConfiguration(null);
 
-    private static AppServerSingleSignOn getDefaultServerSSOConfiguration() {
-        AppServerSingleSignOn configuration = new AppServerSingleSignOn();
+        AppServerSingleSignOn serverConfiguration = TestUtils.getDefaultServerSSOConfiguration();
+        agentConfiguration.initialize(serverConfiguration, TestUtils.getDefaultWebAppSSOConfiguration());
+        agentConfiguration.getSAML2().setSSOX509Credential(new SSOX509Credential(
+                serverConfiguration.getIdpCertificateAlias(), TestUtils.getDefaultServerSecurityConfiguration()));
 
-        configuration.setIdpURL(TestConstants.DEFAULT_IDP_URL);
-        configuration.setIdpEntityId(TestConstants.DEFAULT_IDP_ENTITY_ID);
-        configuration.setSignatureValidatorImplClass(TestConstants.DEFAULT_SIGN_VALIDATOR);
-        configuration.setIdpCertificateAlias(TestConstants.DEFAULT_IDP_CERT_ALIAS);
-
-        return configuration;
+        agentConfiguration.validate();
     }
 
-    private static AppServerSecurity getDefaultServerSecurityConfiguration() {
-        AppServerSecurity configuration = new AppServerSecurity();
+    @Test(description = "Tests the invalid combination of setting service provider entity ID to null",
+            expectedExceptions = {SSOException.class})
+    public void testInvalidSPEntityIdCombination() throws SSOException {
+        SSOAgentConfiguration agentConfiguration = new SSOAgentConfiguration(null);
 
-        AppServerSecurity.Keystore keystore = new AppServerSecurity.Keystore();
-        keystore.setLocation(TestConstants.DEFAULT_KEY_STORE_LOCATION);
-        keystore.setType(TestConstants.DEFAULT_KEY_STORE_TYPE);
-        keystore.setPassword(TestConstants.DEFAULT_KEY_STORE_PASSWORD);
-        keystore.setKeyAlias(TestConstants.DEFAULT_KEY_ALIAS);
-        keystore.setKeyPassword(TestConstants.DEFAULT_KEY_PASSWORD);
+        AppServerSingleSignOn serverConfiguration = TestUtils.getDefaultServerSSOConfiguration();
+        WebAppSingleSignOn webappConfiguration = TestUtils.getDefaultWebAppSSOConfiguration();
+        webappConfiguration.setIssuerId(null);
+        agentConfiguration.initialize(serverConfiguration, webappConfiguration);
 
-        configuration.setKeystore(keystore);
-
-        return configuration;
+        agentConfiguration.validate();
     }
 
-    private static WebAppSingleSignOn getDefaultWebAppSSOConfiguration() {
-        WebAppSingleSignOn configuration = new WebAppSingleSignOn();
+    @Test(description = "Tests the invalid combination of setting Assertion Consumer Service URL to null",
+            expectedExceptions = {SSOException.class})
+    public void testInvalidACSURLCombination() throws SSOException {
+        SSOAgentConfiguration agentConfiguration = new SSOAgentConfiguration(null);
 
-        configuration.enableHandlingConsumerURLAfterSLO(true);
-        configuration.setQueryParams(TestConstants.DEFAULT_QUERY_PARAMS);
-        configuration.setApplicationServerURL(TestConstants.APPLICATION_SERVER_URL_DEFAULT);
-        configuration.enableSSO(true);
-        configuration.setRequestURLPostfix(TestConstants.DEFAULT_REQUEST_URL_POSTFIX);
-        configuration.setHttpBinding(TestConstants.DEFAULT_HTTP_BINDING);
-        configuration.setConsumerURLPostfix(TestConstants.DEFAULT_CONSUMER_URL_POSTFIX);
-        configuration.setAttributeConsumingServiceIndex(TestConstants.DEFAULT_ATTR_CONSUMING_SERVICE_INDEX);
-        configuration.enableSLO(true);
-        configuration.setSLOURLPostfix(TestConstants.DEFAULT_SLO_URL_POSTFIX);
-        configuration.enableAssertionEncryption(true);
-        configuration.enableAssertionSigning(true);
-        configuration.enableRequestSigning(true);
-        configuration.enableResponseSigning(true);
-        configuration.enableForceAuthn(false);
-        configuration.enablePassiveAuthn(false);
+        AppServerSingleSignOn serverConfiguration = TestUtils.getDefaultServerSSOConfiguration();
+        WebAppSingleSignOn webappConfiguration = TestUtils.getDefaultWebAppSSOConfiguration();
+        webappConfiguration.setConsumerURL(null);
+        agentConfiguration.initialize(serverConfiguration, webappConfiguration);
 
-        return configuration;
+        agentConfiguration.validate();
+    }
+
+    @Test(description = "Tests the invalid combination of requiring the signature application and not setting SSL " +
+            "credentials", expectedExceptions = {SSOException.class})
+    public void testInvalidSignatureValidationCombination() throws SSOException {
+        SSOAgentConfiguration agentConfiguration = new SSOAgentConfiguration(null);
+
+        agentConfiguration.initialize(TestUtils.getDefaultServerSSOConfiguration(), TestUtils.
+                getDefaultWebAppSSOConfiguration());
+
+        agentConfiguration.validate();
+    }
+
+    @Test(description = "Tests the invalid combination of requiring the signature application without setting the " +
+            "entity certificate", expectedExceptions = {SSOException.class})
+    public void testInvalidSignatureValidationWithoutEntityCert() throws SSOException {
+        SSOAgentConfiguration agentConfiguration = new SSOAgentConfiguration(null);
+
+        agentConfiguration.initialize(TestUtils.getDefaultServerSSOConfiguration(), TestUtils.
+                getDefaultWebAppSSOConfiguration());
+        agentConfiguration.getSAML2().setSSOX509Credential(new SSOX509Credential(null,
+                TestUtils.getDefaultServerSecurityConfiguration()));
+
+        agentConfiguration.validate();
+    }
+
+    @Test(description = "Tests the invalid combination of requiring the signature application without setting the " +
+            "private key alias", expectedExceptions = {SSOException.class})
+    public void testInvalidSignatureValidationWithoutPrivateKeyAlias() throws SSOException {
+        SSOAgentConfiguration agentConfiguration = new SSOAgentConfiguration(null);
+
+        AppServerSecurity securityConfiguration = TestUtils.getDefaultServerSecurityConfiguration();
+        securityConfiguration.getKeystore().setKeyAlias(null);
+        AppServerSingleSignOn serverConfiguration = TestUtils.getDefaultServerSSOConfiguration();
+        agentConfiguration.initialize(serverConfiguration, TestUtils.getDefaultWebAppSSOConfiguration());
+        agentConfiguration.getSAML2().setSSOX509Credential(new SSOX509Credential(serverConfiguration.
+                getIdpCertificateAlias(), securityConfiguration));
+
+        agentConfiguration.validate();
     }
 }

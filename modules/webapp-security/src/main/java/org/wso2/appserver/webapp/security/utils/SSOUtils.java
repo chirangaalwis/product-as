@@ -306,9 +306,9 @@ public class SSOUtils {
      */
     public static RelayState generateRelayState(Request request) {
         RelayState relayState = new RelayState();
+
         relayState.setRequestedURL(request.getRequestURI());
         relayState.setRequestQueryString(request.getQueryString());
-        //  TODO: check why request parameters are needed
         relayState.setRequestParameters(request.getParameterMap());
 
         return relayState;

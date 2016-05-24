@@ -59,7 +59,8 @@ public class SSOAgentSessionManager {
                 sessions = ssoSessionsMap.remove(sessionIndex);
             }
         }
-        sessions = Optional.ofNullable(sessions).orElse(new HashSet<>());
+        sessions = Optional.ofNullable(sessions)
+                .orElse(new HashSet<>());
         return sessions;
     }
 
@@ -72,7 +73,8 @@ public class SSOAgentSessionManager {
      */
     public static Set<HttpSession> invalidateAllSessions(String sessionIndex) {
         Set<HttpSession> sessions = ssoSessionsMap.remove(sessionIndex);
-        sessions = Optional.ofNullable(sessions).orElse(new HashSet<>());
+        sessions = Optional.ofNullable(sessions)
+                .orElse(new HashSet<>());
         return sessions;
     }
 

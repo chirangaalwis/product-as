@@ -84,7 +84,10 @@ public class SSOX509Credential {
             } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
                 throw new SSOException("Error occurred while retrieving the private key");
             }
-            publicKey = getEntityCertificate().getPublicKey();
+
+            if (entityCertificate != null) {
+                publicKey = entityCertificate.getPublicKey();
+            }
         }
     }
 }

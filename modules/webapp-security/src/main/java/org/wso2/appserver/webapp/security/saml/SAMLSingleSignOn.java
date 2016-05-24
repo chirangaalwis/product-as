@@ -326,10 +326,11 @@ public class SAMLSingleSignOn extends SingleSignOn {
                 if (relayState != null) {
                     request.getSession(false).removeAttribute(relayStateId);
                     StringBuilder requestedURI = new StringBuilder(relayState.getRequestedURL());
-                    relayState.getRequestQueryString().
-                            ifPresent(queryString -> requestedURI.append("?").append(queryString));
-                    relayState.getRequestParameters().ifPresent(queryParameters -> request.getSession(false).
-                            setAttribute(Constants.REQUEST_PARAM_MAP, queryParameters));
+                    relayState.getRequestQueryString()
+                            .ifPresent(queryString -> requestedURI.append("?").append(queryString));
+                    relayState.getRequestParameters()
+                            .ifPresent(queryParameters -> request.getSession(false).
+                                    setAttribute(Constants.REQUEST_PARAM_MAP, queryParameters));
                     response.sendRedirect(requestedURI.toString());
                 } else {
                     response.sendRedirect(contextConfiguration.getApplicationServerURL() + request.getContextPath());
