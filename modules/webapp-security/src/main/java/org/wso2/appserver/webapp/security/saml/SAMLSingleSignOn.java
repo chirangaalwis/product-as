@@ -228,7 +228,6 @@ public class SAMLSingleSignOn extends SingleSignOn {
         Optional.ofNullable(request.getSession(false))
                 .ifPresent(httpSession -> httpSession.setAttribute(relayStateId, relayState));
 
-        //  TODO: check if the isPassive option of wso2as-web.xml can be removed since this is overridden here + usage
         Optional.ofNullable(agentConfiguration)
                 .ifPresent(agent -> agent.getSAML2().enablePassiveAuthentication(false));
         if (requestResolver.isHttpPOSTBinding()) {
