@@ -537,8 +537,6 @@ class SAMLSSOManager {
                     setSessionIndex(sessionId);
             SSOAgentSessionManager.addAuthenticatedSession(request.getSession(false));
         }
-
-        request.getSession().setAttribute(Constants.SESSION_BEAN, session);
     }
 
     /**
