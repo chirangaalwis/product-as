@@ -125,14 +125,9 @@ public class SSOAgentConfiguration {
             saml2.idPEntityId = Optional.ofNullable(configuration.getIdpEntityId())
                     .orElse(Constants.DEFAULT_IDP_ENTITY_ID);
             if (saml2.isResponseSigned()) {
-                saml2.signatureValidatorImplClass = configuration.getSignatureValidatorImplClass();
-                if (saml2.signatureValidatorImplClass == null) {
-                    if (containerLog != null) {
-                        containerLog.warn("Signature validator implementation class has not been configured");
-                    }
-                }
+                saml2.signatureValidatorImplClass = Optional.ofNullable(configuration.getSignatureValidatorImplClass())
+                        .orElse(Constants.DEFAULT_SIGN_VALIDATOR_IMPL);
             }
-
         });
     }
 

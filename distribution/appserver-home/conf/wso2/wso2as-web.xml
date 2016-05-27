@@ -18,16 +18,10 @@
     </class-loader>
 
     <saml2-single-sign-on>
-        <!-- The list of request URIs to be skipped when processing SAML 2.0 based single-sign-on or single-logout -->
-        <!--<skip-uris>
-            <skip-uri>/</skip-uri>
-        </skip-uris>-->
+        <!-- TODO: the order of the configurations has to change -->
 
         <!-- Enable/disable the option to automatically redirect the consumer URL from the acs page after single-logout. -->
         <handle-consumer-url-after-slo>true</handle-consumer-url-after-slo>
-
-        <!-- Additional query parameters that can be passed along with a SAML 2.0 Authentication Request URL. -->
-        <!--<query-params>paramOne=valOne&amp;paramTwo=valTwo</query-params>-->
 
         <!-- The Application Server URL -->
         <application-server-url>https://localhost:8443</application-server-url>
@@ -43,12 +37,6 @@
 
         <!-- The postfix to a URL in order to identify the SAML 2.0 Assertion Consumer -->
         <consumer-url-postfix>/acs</consumer-url-postfix>
-
-        <!--
-            An index which identifies the information associated with the requester describing the SAML 2.0
-            Attributes which the requester desires to be supplied when the Identity Provider returns the Response.
-        -->
-        <attribute-consuming-service-index>1784849</attribute-consuming-service-index>
 
         <!-- Enable/disable SAML 2.0 based Single-Logout (SLO) Profile. This is disabled by default. -->
         <enable-slo>false</enable-slo>
@@ -80,9 +68,6 @@
             interface from the requester and interact with the presenter in a noticeable fashion.
         -->
         <is-passive-authn>false</is-passive-authn>
-
-        <!-- Additional, new properties other than the above configurations can be defined as properties -->
-        <!--<property key="redirectPathAfterSLO">https://localhost:8443/</property>-->
     </saml2-single-sign-on>
 
     <statistics-publisher>

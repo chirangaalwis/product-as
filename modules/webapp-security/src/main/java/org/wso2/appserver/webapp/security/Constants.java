@@ -26,6 +26,8 @@ public class Constants {
     public static final String HTTP_POST_PARAM_SAML_RESPONSE = "SAMLResponse";
 
     //  SSO agent configuration property default values
+    public static final String DEFAULT_SIGN_VALIDATOR_IMPL = "org.wso2.appserver.webapp.security.saml.signature" +
+            ".SAMLSignatureValidatorImplementation";
     public static final String DEFAULT_CONSUMER_URL_POSTFIX = "/acs";
     public static final String SAML2_HTTP_POST_BINDING = "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST";
     public static final String DEFAULT_IDP_URL = "https://localhost:9443/samlsso";
