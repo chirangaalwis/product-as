@@ -31,10 +31,28 @@ public class ConfigurationLoader extends HttpServlet {
     private static final long serialVersionUID = -1338848056022270732L;
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Boolean isServerConfigurationUniform = (Boolean) (request.getAttribute("isServerConfigurationUniform"));
-        response.setHeader("isServerConfigurationUniform", isServerConfigurationUniform.toString());
+        //  capture results passed through request attributes
+        transferValidationResult(request, response, "isServerConfigurationUniform");
+        transferValidationResult(request, response, "isContextConfigurationUniform");
+        transferValidationResult(request, response, "keyStoreFileAvailable");
+        transferValidationResult(request, response, "trustStoreFileAvailable");
 
-        Boolean isContextConfigurationUniform = (Boolean) (request.getAttribute("isContextConfigurationUniform"));
-        response.setHeader("isContextConfigurationUniform", isContextConfigurationUniform.toString());
+        //  capture the system properties set
+        captureSystemProperty(response, "javax.net.ssl.keyStore");
+        captureSystemProperty(response, "javax.net.ssl.keyStorePassword");
+        captureSystemProperty(response, "javax.net.ssl.keyStoreType");
+        captureSystemProperty(response, "javax.net.ssl.trustStore");
+        captureSystemProperty(response, "javax.net.ssl.trustStorePassword");
+        captureSystemProperty(response, "javax.net.ssl.trustStoreType");
+    }
+
+    private static void transferValidationResult(
+            HttpServletRequest request, HttpServletResponse response, String configIdentifier) {
+        Boolean result = (Boolean) (request.getAttribute(configIdentifier));
+        response.setHeader(configIdentifier, result.toString());
+    }
+
+    private static void captureSystemProperty(HttpServletResponse response, String systemPropertyKey) {
+        response.setHeader(systemPropertyKey, System.getProperty(systemPropertyKey));
     }
 }

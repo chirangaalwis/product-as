@@ -11,6 +11,8 @@ import org.wso2.appserver.sample.utils.ContextConfigurationUtils;
 import org.wso2.appserver.sample.utils.ServerConfigurationUtils;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import javax.servlet.ServletException;
 
@@ -39,6 +41,11 @@ public class ConfigurationLoaderValve extends ValveBase {
                             compare(actualWebAppConfiguration, configuration);
                     request.setAttribute("isContextConfigurationUniform", isContextConfigurationUniform);
                 });
+
+        request.setAttribute("keyStoreFileAvailable", Files.exists(Paths.get(System.getProperty("javax.net.ssl" +
+                ".keyStore"))));
+        request.setAttribute("trustStoreFileAvailable", Files.exists(Paths.get(System.getProperty("javax.net.ssl" +
+                ".trustStore"))));
 
         getNext().invoke(request, response);
     }

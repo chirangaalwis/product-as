@@ -34,20 +34,65 @@ import java.util.Map;
  * @since 6.0.0
  */
 public class ConfigurationLoaderTestCase extends TestBase {
-    private static final String sampleContextRoot = "/configuration-loader-" + System.getProperty("appserver.version");
-    private static final String serverConfigurationTestResultAttrName = "isServerConfigurationUniform";
-    private static final String contextConfigurationTestResultAttrName = "isContextConfigurationUniform";
-
     @Test(description = "Tests the server level descriptor content loading using a sample valve")
     public void testServerConfigurationLoading() throws IOException {
-        URL requestUrl = new URL(getBaseUrl() + sampleContextRoot);
-        HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
-        connection.setRequestMethod(TestConstants.HTTP_GET_METHOD);
+        validateConfigurations("isServerConfigurationUniform");
+    }
+
+    @Test(description = "Tests the context level descriptor content loading using a sample valve, for a sample context")
+    public void testContextConfigurationLoading() throws IOException {
+        validateConfigurations("isContextConfigurationUniform");
+    }
+
+    @Test(description = "Tests the availability of keystore file")
+    public void testKeystoreFileAvailability() throws IOException {
+        validateConfigurations("keyStoreFileAvailable");
+    }
+
+    @Test(description = "Tests the availability of trust-store file")
+    public void testTrustStoreFileAvailability() throws IOException {
+        validateConfigurations("trustStoreFileAvailable");
+    }
+
+    @Test(description = "Tests whether the 'javax.net.ssl.keyStore' system property is correctly set")
+    public void testKeystoreLocationSystemProperty() throws IOException {
+        String expectedKeystoreRelativePath = "/conf/wso2/wso2carbon.jks";
+        testSystemProperty("javax.net.ssl.keyStore", getAppserverHome() + expectedKeystoreRelativePath);
+    }
+
+    @Test(description = "Tests whether the 'javax.net.ssl.keyStorePassword' system property is correctly set")
+    public void testKeystorePasswordSystemProperty() throws IOException {
+        testSystemProperty("javax.net.ssl.keyStorePassword", "wso2carbon");
+    }
+
+    @Test(description = "Tests whether the 'javax.net.ssl.keyStoreType' system property is correctly set")
+    public void testKeystoreTypeSystemProperty() throws IOException {
+        testSystemProperty("javax.net.ssl.keyStoreType", "JKS");
+    }
+
+    @Test(description = "Tests whether the 'javax.net.ssl.trustStore' system property is correctly set")
+    public void testTrustStoreLocationSystemProperty() throws IOException {
+        String expectedTrustStoreRelativePath = "/conf/wso2/client-truststore.jks";
+        testSystemProperty("javax.net.ssl.trustStore", getAppserverHome() + expectedTrustStoreRelativePath);
+    }
+
+    @Test(description = "Tests whether the 'javax.net.ssl.trustStorePassword' system property is correctly set")
+    public void testTrustStorePasswordSystemProperty() throws IOException {
+        testSystemProperty("javax.net.ssl.trustStorePassword", "wso2carbon");
+    }
+
+    @Test(description = "Tests whether the 'javax.net.ssl.trustStoreType' system property is correctly set")
+    public void testTrustStoreTypeSystemProperty() throws IOException {
+        testSystemProperty("javax.net.ssl.trustStoreType", "JKS");
+    }
+
+    private void validateConfigurations(String returnHeaderName) throws IOException {
+        HttpURLConnection connection = getConnection();
 
         int responseCode = connection.getResponseCode();
         if (responseCode == 200) {
             Map<String, List<String>> headerFields = connection.getHeaderFields();
-            List<String> fields = headerFields.get(serverConfigurationTestResultAttrName);
+            List<String> fields = headerFields.get(returnHeaderName);
             if (fields != null) {
                 Assert.assertTrue(Boolean.parseBoolean(fields.get(0)));
             } else {
@@ -58,23 +103,28 @@ public class ConfigurationLoaderTestCase extends TestBase {
         }
     }
 
-    @Test(description = "Tests the context level descriptor content loading using a sample valve, for a sample context")
-    public void testContextConfigurationLoading() throws IOException {
-        URL requestUrl = new URL(getBaseUrl() + sampleContextRoot);
-        HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
-        connection.setRequestMethod(TestConstants.HTTP_GET_METHOD);
+    private void testSystemProperty(String systemPropertyKey, String expectedValue) throws IOException {
+        HttpURLConnection connection = getConnection();
 
         int responseCode = connection.getResponseCode();
         if (responseCode == 200) {
             Map<String, List<String>> headerFields = connection.getHeaderFields();
-            List<String> fields = headerFields.get(contextConfigurationTestResultAttrName);
+            List<String> fields = headerFields.get(systemPropertyKey);
             if (fields != null) {
-                Assert.assertTrue(Boolean.parseBoolean(fields.get(0)));
+                Assert.assertTrue(fields.get(0).equals(expectedValue));
             } else {
                 Assert.fail();
             }
         } else {
             Assert.fail();
         }
+    }
+
+    private HttpURLConnection getConnection() throws IOException {
+        URL requestUrl = new URL(getBaseUrl() + "/configuration-loader-" + System.getProperty("appserver.version"));
+        HttpURLConnection connection = (HttpURLConnection) requestUrl.openConnection();
+        connection.setRequestMethod(TestConstants.HTTP_GET_METHOD);
+
+        return connection;
     }
 }
