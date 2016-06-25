@@ -309,12 +309,13 @@ public class SAML2SSOManager {
     private AuthnRequest buildAuthnRequest(Request request) {
         //  the Issuer element identifies the entity that generated the request message
         Issuer issuer = new IssuerBuilder().buildObject();
-        //  generates the service provider entity ID
-        String issuerID = SSOUtils.generateIssuerID(request.getContextPath(), request.getHost().getAppBase())
-                .orElse("");
-        contextConfiguration.setIssuerId(Optional.ofNullable(contextConfiguration.getIssuerId())
-                .orElse(issuerID));
 
+        if (contextConfiguration.getIssuerId() == null) {
+            //  generates the service provider entity ID
+            String issuerID = SSOUtils.generateIssuerID(request.getContextPath(), request.getHost().getAppBase())
+                    .orElse("");
+            contextConfiguration.setIssuerId(issuerID);
+        }
         issuer.setValue(contextConfiguration.getIssuerId());
 
         //  the NameIDPolicy element tailors the subject name identifier of assertions resulting from AuthnRequest
@@ -357,17 +358,17 @@ public class SAML2SSOManager {
                         .orElse(false));
         authnRequest.setProtocolBinding(contextConfiguration.getHttpBinding());
 
-        //  generates the SAML 2.0 Assertion Consumer URL
-        String acsBase = Optional.ofNullable(serverConfiguration.getACSBase())
-                .orElse(SSOUtils.constructApplicationServerURL(request)
-                        .orElse(""));
-        String consumerURLPostfix = Optional.ofNullable(contextConfiguration.getConsumerURLPostfix())
-                .orElse(Constants.DEFAULT_CONSUMER_URL_POSTFIX);
-        String consumerURL = SSOUtils.generateConsumerURL(request.getContextPath(), acsBase, consumerURLPostfix)
-                .orElse("");
-        contextConfiguration.setConsumerURL(Optional.ofNullable(contextConfiguration.getConsumerURL())
-                .orElse(consumerURL));
-
+        if (contextConfiguration.getConsumerURL() == null) {
+            //  generates the SAML 2.0 Assertion Consumer URL
+            String acsBase = Optional.ofNullable(serverConfiguration.getACSBase())
+                    .orElse(SSOUtils.constructApplicationServerURL(request)
+                            .orElse(""));
+            String consumerURLPostfix = Optional.ofNullable(contextConfiguration.getConsumerURLPostfix())
+                    .orElse(Constants.DEFAULT_CONSUMER_URL_POSTFIX);
+            String consumerURL = SSOUtils.generateConsumerURL(request.getContextPath(), acsBase, consumerURLPostfix)
+                    .orElse("");
+            contextConfiguration.setConsumerURL(consumerURL);
+        }
         authnRequest.setAssertionConsumerServiceURL(contextConfiguration.getConsumerURL());
 
         authnRequest.setIssuer(issuer);

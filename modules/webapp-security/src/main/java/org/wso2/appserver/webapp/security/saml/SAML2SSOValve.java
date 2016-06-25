@@ -42,11 +42,11 @@ import javax.servlet.ServletException;
  * @since 6.0.0
  */
 public class SAML2SSOValve extends SingleSignOn {
-    //  Holds a reference to the context level single-sign-on configurations representation depending on the
+    //  holds a reference to the context level single-sign-on configurations representation depending on the
     //  context of the request passed through the invoke method of the Valve.
     private WebAppSingleSignOn contextConfiguration;
 
-    //
+    //  the request resolver based on configurations and request content
     private SSORequestResolver requestResolver;
 
     /**
@@ -88,7 +88,8 @@ public class SAML2SSOValve extends SingleSignOn {
         }
 
         //  checks if single-sign-on feature is enabled
-        if (!this.contextConfiguration.isSSOEnabled()) {
+        if (!Optional.ofNullable(this.contextConfiguration.isSSOEnabled())
+                .orElse(false)) {
             containerLog.debug("SAML 2.0 single-sign-on not enabled in web app " + request.getContext().getName() +
                     ", skipping SAML 2.0 based single-sign-on...");
             //  moves onto the next valve, if single-sign-on is not enabled
@@ -204,7 +205,7 @@ public class SAML2SSOValve extends SingleSignOn {
                 .orElse(false));
         contextConfiguration.enableAssertionSigning(
                 Optional.ofNullable(contextConfiguration.isAssertionSigningEnabled())
-                        .orElse(false));
+                        .orElse(true));
         contextConfiguration.enableAssertionEncryption(
                 Optional.ofNullable(contextConfiguration.isAssertionEncryptionEnabled())
                         .orElse(false));

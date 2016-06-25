@@ -49,7 +49,8 @@ public class SSORequestResolver {
     public boolean isURLToSkip() {
         return ssoConfiguration.getSkipURIs() != null &&
                 Optional.ofNullable(ssoConfiguration.getSkipURIs().getSkipURIs())
-                        .orElse(new ArrayList<>()).contains(request.getRequestURI());
+                        .orElse(new ArrayList<>())
+                        .contains(request.getRequestURI());
     }
 
     /**
