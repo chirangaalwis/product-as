@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,10 +85,8 @@ public class ApplicationServerConfigurationTest {
             "descriptor", priority = 2)
     public void testObjectLoadingFromDescriptor() throws IOException, ApplicationServerConfigurationException {
         //  deletes the existing server descriptor
-        Files.delete(dist_server_descriptor);
-
         Path source = Paths.get(TestConstants.TEST_RESOURCES, Constants.APP_SERVER_DESCRIPTOR);
-        Files.copy(source, dist_server_descriptor);
+        Files.copy(source, dist_server_descriptor, StandardCopyOption.REPLACE_EXISTING);
 
         lifecycle_components
                 .stream()
