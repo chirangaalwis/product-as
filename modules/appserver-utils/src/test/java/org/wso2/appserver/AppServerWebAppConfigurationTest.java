@@ -69,10 +69,19 @@ public class AppServerWebAppConfigurationTest {
         List<Lifecycle> components = new ArrayList<>();
         components.add(host);
         components.add(sample_context);
+<<<<<<< HEAD
         components
                 .stream()
                 .forEach(component -> context_configuration_loader.
                         lifecycleEvent(new LifecycleEvent(component, Lifecycle.BEFORE_START_EVENT, null)));
+=======
+        components.stream().forEach(component -> {
+            context_configuration_loader.
+                    lifecycleEvent(new LifecycleEvent(component, Lifecycle.BEFORE_START_EVENT, null));
+            context_configuration_loader.
+                    lifecycleEvent(new LifecycleEvent(component, Lifecycle.CONFIGURE_START_EVENT, null));
+        });
+>>>>>>> parent of 840bb32... Merge branch 'wso2as-6.0.0-code-formatting-changes' into wso2as-6.0.0-revamped-single-sign-on
     }
 
     @Test(description = "Loads the XML file content of a WSO2 App Server specific webapp descriptor", priority = 2)
@@ -218,25 +227,15 @@ public class AppServerWebAppConfigurationTest {
     }
 
     private static boolean compareSkipURIs(WebAppSingleSignOn.SkipURIs actual, WebAppSingleSignOn.SkipURIs expected) {
-        return actual.getSkipURIs()
-                .stream()
-                .filter(skipURI -> expected.getSkipURIs()
-                        .stream()
-                        .filter(uri -> uri.trim().equals(skipURI))
-                        .count() > 0)
-                .count() == expected.getSkipURIs().size();
+        return actual.getSkipURIs().stream().filter(skipURI -> expected.getSkipURIs().stream().
+                filter(uri -> uri.trim().equals(skipURI)).count() > 0).count() == expected.getSkipURIs().size();
     }
 
     private static boolean compareProperties(List<WebAppSingleSignOn.Property> actual,
-                                             List<WebAppSingleSignOn.Property> expected) {
-        return actual
-                .stream()
-                .filter(property -> expected
-                        .stream()
-                        .filter(exp -> (property.getKey().trim().equals(exp.getKey()) && property.getValue().trim().
-                                equals(exp.getValue())))
-                        .count() > 0)
-                .count() == expected.size();
+            List<WebAppSingleSignOn.Property> expected) {
+        return actual.stream().filter(property -> expected.stream().
+                filter(exp -> (property.getKey().trim().equals(exp.getKey()) && property.getValue().trim().
+                        equals(exp.getValue()))).count() > 0).count() == expected.size();
     }
 
     private static boolean compareSSLProperties(WebAppSingleSignOn actual, WebAppSingleSignOn expected) {

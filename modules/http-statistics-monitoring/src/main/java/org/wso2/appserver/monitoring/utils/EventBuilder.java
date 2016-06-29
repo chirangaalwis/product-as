@@ -80,10 +80,9 @@ public class EventBuilder {
      * Reads the system variables with the defined prefix and populates the arbitrary data map.
      */
     private static void readArbitraryData(String prefix) {
-        arbitraryData = System.getenv().entrySet()
-                .stream()
+        arbitraryData = System.getenv().entrySet().stream()
                 .filter(varName -> varName.getKey().startsWith(prefix))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.toMap(varName -> varName.getKey(), varName -> varName.getValue()));
     }
 
     /**
@@ -100,16 +99,14 @@ public class EventBuilder {
         List<Object> payload = new ArrayList<>();
         final String forwardSlash = "/";
 
-        Optional.ofNullable(request.getRequestURI())
-                .map(String::trim)
-                .ifPresent(requestedURI -> {
-                    String[] requestedUriParts = requestedURI.split(forwardSlash);
-                    if (!forwardSlash.equals(requestedURI)) {
-                        payload.add((requestedUriParts[1]));
-                    } else {
-                        payload.add((forwardSlash));
-                    }
-                });
+        Optional.ofNullable(request.getRequestURI()).map(String::trim).ifPresent(requestedURI -> {
+            String[] requestedUriParts = requestedURI.split(forwardSlash);
+            if (!forwardSlash.equals(requestedURI)) {
+                payload.add((requestedUriParts[1]));
+            } else {
+                payload.add((forwardSlash));
+            }
+        });
 
         String webappServletVersion = request.getContext().getEffectiveMajorVersion() + "." +
                 request.getContext().getEffectiveMinorVersion();
@@ -150,13 +147,12 @@ public class EventBuilder {
      */
     private static String getRequestHeaders(Request request) {
         List<String> requestHeaders = new ArrayList<>();
-        Collections.list(request.getHeaderNames())
-                .forEach(header -> {
-                    List<String> values = new ArrayList<>();
-                    values.add(request.getHeader(header));
-                    String tmpString = "(" + StringUtils.join(values, ",") + ")";
-                    requestHeaders.add(header + ":" + tmpString);
-                });
+        Collections.list(request.getHeaderNames()).forEach(header -> {
+            List<String> values = new ArrayList<>();
+            values.add(request.getHeader(header));
+            String tmpString = "(" + StringUtils.join(values, ",") + ")";
+            requestHeaders.add(header + ":" + tmpString);
+        });
         return StringUtils.join(requestHeaders, ";");
     }
 
@@ -168,13 +164,12 @@ public class EventBuilder {
      */
     private static String getResponseHeaders(Response response) {
         List<String> responseHeaders = new ArrayList<>();
-        response.getHeaderNames()
-                .forEach(header -> {
-                    List<String> values = new ArrayList<>();
-                    values.add(response.getHeader(header));
-                    String tmpString = "(" + StringUtils.join(values, ",") + ")";
-                    responseHeaders.add(header + ":" + tmpString);
-                });
+        response.getHeaderNames().forEach(header -> {
+            List<String> values = new ArrayList<>();
+            values.add(response.getHeader(header));
+            String tmpString = "(" + StringUtils.join(values, ",") + ")";
+            responseHeaders.add(header + ":" + tmpString);
+        });
         return StringUtils.join(responseHeaders, ",");
     }
 

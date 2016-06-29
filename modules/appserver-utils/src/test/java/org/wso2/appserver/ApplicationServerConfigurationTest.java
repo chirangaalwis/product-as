@@ -62,10 +62,17 @@ public class ApplicationServerConfigurationTest {
     @Test(description = "Attempts to load XML file content of a non-existent server descriptor",
             expectedExceptions = { ApplicationServerRuntimeException.class })
     public void testObjectLoadingFromNonExistentDescriptor() {
+<<<<<<< HEAD
         lifecycle_components
                 .stream()
                 .forEach(component -> loader.lifecycleEvent(
                         new LifecycleEvent(component, Lifecycle.BEFORE_START_EVENT, null)));
+=======
+        lifecycle_components.stream().forEach(component -> {
+            loader.lifecycleEvent(new LifecycleEvent(component, Lifecycle.BEFORE_START_EVENT, null));
+            loader.lifecycleEvent(new LifecycleEvent(component, Lifecycle.AFTER_START_EVENT, null));
+        });
+>>>>>>> parent of 840bb32... Merge branch 'wso2as-6.0.0-code-formatting-changes' into wso2as-6.0.0-revamped-single-sign-on
     }
 
     @Test(description = "Tests loading the XML file content from an invalid server descriptor", expectedExceptions =
@@ -89,10 +96,17 @@ public class ApplicationServerConfigurationTest {
         Path source = Paths.get(TestConstants.TEST_RESOURCES, Constants.APP_SERVER_DESCRIPTOR);
         Files.copy(source, dist_server_descriptor);
 
+<<<<<<< HEAD
         lifecycle_components
                 .stream()
                 .forEach(component -> loader.lifecycleEvent(
                         new LifecycleEvent(component, Lifecycle.BEFORE_START_EVENT, null)));
+=======
+        lifecycle_components.stream().forEach(component -> {
+            loader.lifecycleEvent(new LifecycleEvent(component, Lifecycle.BEFORE_START_EVENT, null));
+            loader.lifecycleEvent(new LifecycleEvent(component, Lifecycle.AFTER_START_EVENT, null));
+        });
+>>>>>>> parent of 840bb32... Merge branch 'wso2as-6.0.0-code-formatting-changes' into wso2as-6.0.0-revamped-single-sign-on
 
         ApplicationServerConfiguration actual = ServerConfigurationLoader.getServerConfiguration();
         ApplicationServerConfiguration expected = generateDefault();
@@ -102,7 +116,7 @@ public class ApplicationServerConfigurationTest {
         Files.delete(dist_server_descriptor);
     }
 
-    private static ApplicationServerConfiguration generateDefault() {
+    protected static ApplicationServerConfiguration generateDefault() {
         ApplicationServerConfiguration appServerConfiguration = new ApplicationServerConfiguration();
         appServerConfiguration.setClassLoaderEnvironments(prepareClassLoaderEnv());
         appServerConfiguration.setSingleSignOnConfiguration(prepareSSOConfigs());
@@ -126,11 +140,9 @@ public class ApplicationServerConfigurationTest {
         envList.add(cxf);
         envList.add(jaxrs);
 
-        envList
-                .forEach(environment -> environment.setClasspath(string_sub.replace(environment.getClasspath())));
-        envList
-                .forEach(environment -> environment.
-                        setClasspath(StrSubstitutor.replaceSystemProperties(environment.getClasspath())));
+        envList.forEach(environment -> environment.setClasspath(string_sub.replace(environment.getClasspath())));
+        envList.forEach(environment -> environment.
+                setClasspath(StrSubstitutor.replaceSystemProperties(environment.getClasspath())));
 
         AppServerClassLoading.Environments environments = new AppServerClassLoading.Environments();
         environments.setEnvironments(envList);
@@ -203,7 +215,7 @@ public class ApplicationServerConfigurationTest {
         return configuration;
     }
 
-    private static boolean compare(ApplicationServerConfiguration actual, ApplicationServerConfiguration expected) {
+    protected static boolean compare(ApplicationServerConfiguration actual, ApplicationServerConfiguration expected) {
         boolean classloading = compareClassloadingConfigurations(actual.getClassLoaderEnvironments(),
                 expected.getClassLoaderEnvironments());
         boolean sso = compareSSOConfigurations(actual.getSingleSignOnConfiguration(),
@@ -219,14 +231,11 @@ public class ApplicationServerConfigurationTest {
     private static boolean compareClassloadingConfigurations(AppServerClassLoading actual,
             AppServerClassLoading expected) {
         if ((actual != null) && (expected != null)) {
-            return actual.getEnvironments().getEnvironments()
-                    .stream()
-                    .filter(env -> expected.getEnvironments().getEnvironments()
-                            .stream()
-                            .filter(expectedEnv -> (expectedEnv.getName().equals(env.getName().trim()) && expectedEnv.
-                                    getClasspath().equals(env.getClasspath().trim())))
-                            .count() == 1)
-                    .count() == expected.getEnvironments().getEnvironments().size();
+            return actual.getEnvironments().getEnvironments().stream().
+                    filter(env -> expected.getEnvironments().getEnvironments().stream().
+                            filter(expectedEnv -> (expectedEnv.getName().equals(env.getName().trim()) && expectedEnv.
+                                    getClasspath().equals(env.getClasspath().trim()))).count() == 1).
+                    count() == expected.getEnvironments().getEnvironments().size();
         } else {
             return (actual == null) && (expected == null);
         }
@@ -250,14 +259,9 @@ public class ApplicationServerConfigurationTest {
     private static boolean compareSSOProperties(List<AppServerSingleSignOn.Property> actual,
             List<AppServerSingleSignOn.Property> expected) {
         if ((actual != null) && (expected != null)) {
-            return actual
-                    .stream()
-                    .filter(property -> expected
-                            .stream()
-                            .filter(expProperty -> ((expProperty.getKey().equals(property.getKey())) && (expProperty
-                                    .getValue().equals(property.getValue()))))
-                            .count() > 0)
-                    .count() == expected.size();
+            return actual.stream().filter(property -> expected.stream().
+                    filter(expProperty -> ((expProperty.getKey().equals(property.getKey())) && (expProperty.getValue().
+                            equals(property.getValue())))).count() > 0).count() == expected.size();
         } else {
             return (actual == null) && (expected == null);
         }

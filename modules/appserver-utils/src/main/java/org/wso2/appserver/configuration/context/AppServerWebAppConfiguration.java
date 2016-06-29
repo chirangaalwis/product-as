@@ -70,24 +70,22 @@ public class AppServerWebAppConfiguration {
         Optional.ofNullable(webAppConfiguration)
                 .ifPresent(configuration -> {
                     Optional.ofNullable(classLoaderConfiguration)
-                            .ifPresent(classLoaderConfig ->
-                                    classLoaderConfig.merge(configuration.classLoaderConfiguration));
-
+                            .ifPresent(classLoaderConfig -> classLoaderConfig.merge(configuration
+                                    .classLoaderConfiguration));
                     classLoaderConfiguration = Optional.ofNullable(classLoaderConfiguration)
                             .orElse(configuration.classLoaderConfiguration);
 
                     Optional.ofNullable(singleSignOnConfiguration)
                             .ifPresent(ssoConfig -> ssoConfig.merge(configuration.singleSignOnConfiguration));
-
                     singleSignOnConfiguration = Optional.ofNullable(singleSignOnConfiguration)
                             .orElse(configuration.singleSignOnConfiguration);
 
                     Optional.ofNullable(statsPublisherConfiguration)
-                            .ifPresent(statsPublisherConfig ->
-                                    statsPublisherConfig.merge(configuration.statsPublisherConfiguration));
-
+                            .ifPresent(
+                                    statsPublisherConfig -> statsPublisherConfig.merge(configuration
+                                            .statsPublisherConfiguration));
                     statsPublisherConfiguration = Optional.ofNullable(statsPublisherConfiguration)
                             .orElse(configuration.statsPublisherConfiguration);
-                });
+        });
     }
 }

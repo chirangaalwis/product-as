@@ -225,7 +225,7 @@ public class WebAppSingleSignOn {
      *
      * @param configurations the local, context level group of SSO configurations to be merged with
      */
-    void merge(WebAppSingleSignOn configurations) {
+    protected void merge(WebAppSingleSignOn configurations) {
         Optional.ofNullable(configurations)
                 .ifPresent(configs -> {
                     enableSSO = Optional.ofNullable(configs.enableSSO)
@@ -278,15 +278,12 @@ public class WebAppSingleSignOn {
             local
                     .stream()
                     .forEach(effective::add);
-            //  Check whether any globally defined configurations which aren't defined locally, are available
-            Stream<Property> properties = global
-                    .stream()
-                    .filter(globalProperty -> local
-                            .stream()
-                            .filter(localProperty -> ((globalProperty.getKey().equals(localProperty.getKey()))
-                                    && (globalProperty.getValue().equals(localProperty.getValue())))).count() == 0);
-
-            properties.forEach(effective::add);
+            //  check whether any globally defined configurations which aren't defined locally, are available
+            Stream<Property> properties = global.stream().filter(globalProperty -> local.stream().
+                    filter(localProperty -> ((globalProperty.getKey().equals(localProperty.getKey()))
+                            && (globalProperty.getValue().equals(localProperty.getValue())))).count() == 0);
+            properties
+                    .forEach(effective::add);
         } else if (global != null) {
             global
                     .stream()
