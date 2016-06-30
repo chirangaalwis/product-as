@@ -117,6 +117,7 @@ public class TestListener implements ITestListener {
 
             addValveToServerXML(TestConstants.CONFIGURATION_LOADER_SAMPLE_VALVE);
             addValveToServerXML(TestConstants.HTTP_STATISTICS_PUBLISHING_VALVE);
+            addValveToServerXML(TestConstants.SAML2_SSO_VALVE);
 
             log.info(processHandler.getOperatingSystem() + " operating system was detected");
             log.info("Jacoco argLine: " + processHandler.getJacocoArgLine());

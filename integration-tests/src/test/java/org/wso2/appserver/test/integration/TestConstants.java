@@ -44,4 +44,5 @@ public final class TestConstants {
     //  Apache Tomcat Valves
     public static final String CONFIGURATION_LOADER_SAMPLE_VALVE = "org.wso2.appserver.sample.ConfigurationLoaderValve";
     public static final String HTTP_STATISTICS_PUBLISHING_VALVE = "org.wso2.appserver.monitoring.HttpStatValve";
+    public static final String SAML2_SSO_VALVE = "org.wso2.appserver.webapp.security.saml.SAML2SSOValve";
 }
